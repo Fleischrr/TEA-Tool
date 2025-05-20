@@ -1,0 +1,46 @@
+# General
+# Environments
+.env
+
+# Secrets
+*.key
+*.pem
+config.yaml
+
+# Logs
+*.log
+logs/
+
+# Generated files
+*.tmp
+*.bak
+*.swp
+
+
+# Python
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Unit test / coverage reports
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Rope project settings
+.ropeproject
+
+# Custom ignores
+*.sqlite
+.idea/
+*.json
+*.csv
