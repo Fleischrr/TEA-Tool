@@ -8,7 +8,7 @@
 helping to strengthen cybersecurity efforts and reduce the risk of cyberattacks by providing timely insights to stakeholders."*
 
 
----
+
 ## Table of Contents
 - [Introduction](#Introduction)
 - [Requirements](#Requirements)
@@ -36,7 +36,7 @@ This tool empowers IT security teams with actionable insights to enhance their t
 
 >*"You can't protect what you don't know about."*
 
----
+
 ## Requirements
 - Python 3.12 or higher
 - A SHODAN API Key:
@@ -47,7 +47,7 @@ This tool empowers IT security teams with actionable insights to enhance their t
   - Not directly required, but sets the API key persistently for the tool.
 - This guide assumes a Linux environment (Debian-based), but the tool works on Windows as well.
 
----
+
 ## Installation
 Clone the repository as normal:
 ```bash
@@ -72,7 +72,7 @@ Install `requirements.txt` when Virtualenv is active:
 pip3 install -r requirements.txt
 ```
 
----
+
 ## Usage
 The TEA-Tool is designed to be run from the *Command Line Interface* (CLI).
 It can be used in two ways: **Main Usage** and **Headless Usage**, 
@@ -93,10 +93,10 @@ Launch the tool with:
 python tea_tool.py
 ```
 
-This will display the main menu, where you can choose between the TEA-Tool's features:
+This will display one of three  main menus, depending on terminal size, where you can choose between the TEA-Tool's features:
 
 <p align="center">
-  <img src="" width=25% height=25% > 
+  <img src="https://github.com/user-attachments/assets/056015c9-46ab-4933-b232-fc9239ff6a78" width=100% height=100% > 
 </p>
 
 
@@ -109,8 +109,6 @@ These arguments can be viewed with the `-h` or `--help` flag:
 ```bash
 python tea_tool.py -h
 ```
-
-This will output:
 ```
 usage: tea_tool.py [-h] [-s ../path/to/config.json | -x ../path/to/output.csv]
 
@@ -129,7 +127,7 @@ Optional arguments:
                         Path to exported TEA exposure data (CSV format)
 ```
 
----
+
 ## Features
 - **Discovery Scan**: Uses SHODAN and HackerTarget to identify hostnames, IPs, and ASNs.
 - **Full Scan**: Builds on Discovery Scan with the retrieval of port, service, vulnerability and other metadata.
@@ -137,7 +135,7 @@ Optional arguments:
 - **Scheduled Scans**: Run scans automatically using a saved configuration file.
 - **CSV Export**: Export exposure results to a CSV file for further analysis.
 
----
+
 ## Configuration
 The configuration file is read from the root directory with the file name `.env`.
 This file is not included in the repository for security reasons.
@@ -154,9 +152,9 @@ LOG_PATH=/custom/path/to/    # Optional
 - `EXPOSURE_DB_PATH`: Optional path for the SQLite database file. If not specified, the default path is used.
 - `LOG_PATH`: Optional path for the log file. If not specified, the default path is used.
 
-> A paid SHODAN account is *recommended* for a broader host discovery, but **not required**.
+> A paid SHODAN account is *recommended* for a broader host discovery, but is **not required**.
 
----
+
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
