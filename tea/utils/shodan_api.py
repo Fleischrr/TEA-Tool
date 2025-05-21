@@ -27,7 +27,7 @@ def get_shodan_api() -> shodan.Shodan | None:
             "[green]TEA-Tool[/]> [cyan]SHODAN API Key[/]> [bold red]SHODAN API key not found!\n[/]"
             "[green]TEA-Tool[/]> [cyan]SHODAN API Key[/]> "
             "Set [yellow]SHODAN_API_KEY=<KEY>[/] in a [cyan].env[/cyan] file under the TEA-Tool "
-            "directory (i.e. /tea/.env) or enter it below."
+            "directory to store it persistently or enter it below for temporary use."
         )
 
         try:
@@ -47,7 +47,7 @@ def get_shodan_api() -> shodan.Shodan | None:
 
         except KeyboardInterrupt:
             console.print(
-                "\n[green]TEA-Tool[/]> [cyan]SHODAN API Key[/]> Exiting TEA-Tool. Goodbye World!"
+                "\n\n[purple bold]Exiting TEA-Tool. Goodbye World![/]\n"
             )
             return None
 
