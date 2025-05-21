@@ -30,7 +30,21 @@ def shodan_domain_search(
     :param domain_name: The domain name associated with the search.
     :type domain_name: str
     """
-    search_result = shodan_api.search(query=query)
+    try:
+        search_result = shodan_api.search(query=query)
+    except shodan.APIError as e:
+        error_message = str(e)
+        if "Access denied (403 Forbidden)" in error_message:
+            print(
+                "   | Free API cannot use search functionality. "
+                "Please upgrade your API key to retrieve broader results."
+            )
+        else:
+            print(f"   | Error during SHODAN search: {error_message}")
+
+        logger.warning(f"Error during SHODAN search: {error_message}")
+        return
+
     search_matches = search_result.get("matches", [])
 
     for match in search_matches:
