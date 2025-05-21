@@ -56,7 +56,7 @@ def gen_splash_panel() -> Panel:
     welcome.append("\nhttps://github.com/Fleischrr/TEA-Tool\n", style="dim")
     welcome.append("Author: ", style="white")
     welcome.append("Fleischrr\n", style="bold white")
-    welcome.append("Version: 0.8.0\n", style="dim")
+    welcome.append("Version: 1.0.0\n", style="dim")
     welcome.append("\n\"You can't protect what you don't know about.\"", style="dim italic")
 
     return Panel(welcome)
@@ -91,9 +91,11 @@ def gen_info_panel() -> Panel:
 
     info.append("\n[!!] ", style="bold yellow")
     info.append(
-        "Remember to set API keys and configuration settings "
-        "in a .env file under the TEA-Tool directory (i.e. /tea/.env). "
+        "Remember to set the API key in a file under "
+        "the TEA-Tool directory named "
     )
+    info.append(".env ", style="bold yellow")
+    info.append("to store the API key persistently.")
 
     # Usage info
     info.append("\n\n\n  General:\n\n")

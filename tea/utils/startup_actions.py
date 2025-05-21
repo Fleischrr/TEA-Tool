@@ -16,7 +16,7 @@ def startup_actions() -> None:
     This function needs to be called at the beginning of the program to ensure
     that all required initializations and configurations are done.
     """
-    tea_root = Path(__file__).resolve().parent.parent
+    tea_root = Path(__file__).resolve().parent.parent.parent
 
     # Load variables from the .env file into the environment
     load_dotenv(dotenv_path=tea_root / ".env")
