@@ -47,7 +47,7 @@ def get_shodan_api() -> shodan.Shodan | None:
 
         except KeyboardInterrupt:
             console.print(
-                "\n\n[purple bold]Exiting TEA-Tool. Goodbye World![/]\n"
+                "[green]TEA-Tool[/]> \n\n[purple bold]Exiting TEA-Tool. Goodbye World![/]\n"
             )
             return None
 
