@@ -127,6 +127,23 @@ Optional arguments:
                         Path to exported TEA exposure data (CSV format)
 ```
 
+### Docker ( WIP )
+
+Here is an example to use container as environment
+
+Build and run:
+```bash
+docker compose build
+
+docker compose up -d
+
+docker compose exec tea-tool bash
+```
+
+Now you are running inside container, start it by type:
+```
+python tea_tool.py
+```
 
 ## Features
 - **Discovery Scan**: Uses SHODAN and HackerTarget to identify hostnames, IPs, and ASNs.

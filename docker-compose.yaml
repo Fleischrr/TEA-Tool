@@ -1,0 +1,9 @@
+
+services:
+  tea-tool:
+    build: .
+    container_name: tea_tool
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./.env:/home/tea/app/.env:ro # TODO: Rewrite code so it can read environments either from ENV or .env file.
