@@ -138,13 +138,11 @@ Build and run:
 docker compose build
 
 docker compose up -d
+```
 
+To start using the CLI inside container, run the command below and it will also auto run tea-tool
+```sh
 docker compose exec tea-tool bash
-```
-
-Now you are running inside container, start it by type:
-```
-python tea_tool.py
 ```
 
 ## Features

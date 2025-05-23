@@ -1,6 +1,7 @@
 logs/
 .env
 Dockerfile
+docker-compose.yaml
 docker-compose.yml
 .dockerignore
 .git
