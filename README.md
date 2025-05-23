@@ -50,25 +50,27 @@ This tool empowers IT security teams with actionable insights to enhance their t
 
 ## Installation
 Clone the repository as normal:
-```bash
+```sh
 git clone https://github.com/Fleischrr/TEA-Tool.git
 ```
 It is recommended to use a Virtualenv to avoid dependency conflicts with other Python projects.
 For installation methods not using Virtualenv, you already know what you're doing.
 
 Verify or install Python Virtualenv with (note Python v3.12 is used in this example):
-```bash
+```sh
 sudo apt install python3.12-venv
 ```
 
 Create and activate Virtualenv:
-```bash
-python3 -m venv .teaenv && \ 
+```sh
+python3 -m venv .teaenv
+```
+```sh
 source .teaenv/bin/activate
 ```
 
 Install `requirements.txt` when Virtualenv is active:
-```bash
+```sh
 pip3 install -r requirements.txt
 ```
 
@@ -89,7 +91,7 @@ More explanation of the tool's UI usage is available within the main menu,
 or in the documentations under the docs folder.
 
 Launch the tool with:
-```bash
+```sh
 python tea_tool.py
 ```
 
@@ -106,7 +108,7 @@ To use exportation and automation/headless operations, use the tool's available 
 These arguments do not require the main menu UI to be displayed, which allows for automation and scheduled scans.
 
 These arguments can be viewed with the `-h` or `--help` flag:
-```bash
+```sh
 python tea_tool.py -h
 ```
 ```
