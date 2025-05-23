@@ -134,7 +134,7 @@ Optional arguments:
 Here is an example to use container as environment
 
 Build and run:
-```bash
+```sh
 docker compose build
 
 docker compose up -d
