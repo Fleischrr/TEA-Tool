@@ -8,11 +8,11 @@ RUN groupadd --gid $GROUP_ID tea && \
     echo "tea:tea" | chpasswd
 
 USER tea
-WORKDIR /home/tea/
+WORKDIR /home/tea/app
 
 COPY --chown=tea:tea . .
 
-RUN echo "python ~/tea_tool.py" >> .bashrc
+RUN echo "python ~/app/tea_tool.py" >> ~/.bashrc
 
 RUN python3 && \
     pip install --upgrade pip && \
