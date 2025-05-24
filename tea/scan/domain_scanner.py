@@ -125,10 +125,7 @@ def hackertarget_dns_records(
             "Please check your internet connection or the HackerTarget API."
         )
         logger.warning("Error during HackerTarget DNS records retrieval.")
-
-        raise requests.exceptions.RequestException
-
-
+        raise
 def shodan_domain_search(
     shodan_api, query: str, target_domains: dict[IPv4Address, models.TargetHost], domain_name: str
 ) -> None:
