@@ -168,7 +168,7 @@ def help_screen():
         "Set the key in the .evn file with SHODAN_API_KEY=<key> or "
         "during startup for temporary use.\n\n"
         "  - A paid SHODAN account enables the tool to retrieve more hosts during discovery.\n"
-        "During the discovery scan the tool utilize SHODAN's search API, "
+        "During the discovery scan the tool utilizes SHODAN's search API, "
         "which requires a paid account.\n"
         "This is not required for the tool to function, but it is recommended.\n\n"
         "  - Will use the HackerTarget API to retrieve discovery if SHODAN API is free."
