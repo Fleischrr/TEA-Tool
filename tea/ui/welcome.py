@@ -90,10 +90,7 @@ def gen_info_panel() -> Panel:
     info.append("(Free with a Shodan account)\n")
 
     info.append("\n[!!] ", style="bold yellow")
-    info.append(
-        "Remember to set the API key in a file under "
-        "the TEA-Tool directory named "
-    )
+    info.append("Remember to set the API key in a file under the TEA-Tool directory named ")
     info.append(".env ", style="bold yellow")
     info.append("to store the API key persistently.")
 
