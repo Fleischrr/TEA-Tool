@@ -23,10 +23,11 @@ def asn(target: models.TargetHost) -> None:
     :type target: models.TargetHost
     :raises requests.exceptions.RequestException: If error with the HackerTarget API.
     """
+
+    url: str = f"https://api.hackertarget.com/aslookup/?q={target.ip}&output=json&details=true"
     try:
-        # Receive ASN data from given TargetHost.  TODO: Make API key a config option
-        url: str = f"https://api.hackertarget.com/aslookup/?q={target.ip}&output=json&details=true"
-        response: requests.Response = requests.get(url)
+        # Receive ASN data from given TargetHost.
+        response: requests.Response = requests.get(url, timeout=10)
         response.raise_for_status()
         ip_data = json.loads(response.text)
 
