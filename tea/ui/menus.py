@@ -23,7 +23,9 @@ def menu_screen() -> bool:
     ui.show_welcome_screen()
 
     if utils.get_shodan_api() is None:
-        return False
+        console.print(
+            "[green]TEA-Tool[/]> [cyan]Menu Selection[/] [yellow]SHODAN API Key not found![/]"
+        )
 
     commands = [
         "v",  # View Exposure
@@ -168,10 +170,9 @@ def help_screen():
         "Set the key in the .evn file with SHODAN_API_KEY=<key> or "
         "during startup for temporary use.\n\n"
         "  - A paid SHODAN account enables the tool to retrieve more hosts during discovery.\n"
-        "During the discovery scan the tool utilizes SHODAN's search API, "
-        "which requires a paid account.\n"
-        "This is not required for the tool to function, but it is recommended.\n\n"
-        "  - Will use the HackerTarget API to retrieve discovery if SHODAN API is free."
+        "This will also enable the Full Scan with SHODAN. This is not required for the tool to function,\n"
+        "but it is recommended.\n\n"
+        "  - Will use the HackerTarget API to retrieve discovery if the SHODAN API key is non-paid.\n\n"
         "  - Custom paths for the SQLite database and log file can\n"
         "be set in the .env file with EXPOSURE_DB_PATH=<path> and LOG_PATH=<path>.\n"
     )

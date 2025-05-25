@@ -225,35 +225,45 @@ def domain(domain_name: str, country_codes: list[str] = None) -> list[models.Tar
     # Group TargetHost objects by IP address
     target_domains: dict[IPv4Address, models.TargetHost] = {}
 
-    try:
-        target_domains = shodan_dns_records(shodan_api, domain_name, target_domains)
 
-    except shodan.APIError as e:
-        error_message = str(e)
-        if "Access denied (403 Forbidden)" in error_message:
-            print(
-                "   | Free SHODAN API cannot use domain/search functionality. "
-                "Upgrade your API key to retrieve broader results. "
-                "with SHODAN."
-            )
+    if shodan_api:
+        try:
+                target_domains = shodan_dns_records(shodan_api, domain_name, target_domains)
 
-            target_domains = hackertarget_dns_records(domain_name, target_domains)
+        except shodan.APIError as e:
+            error_message = str(e)
+            if "Access denied (403 Forbidden)" in error_message:
+                print(
+                    "   | Free SHODAN API cannot use domain/search functionality. "
+                    "Upgrade your API key to retrieve broader results. "
+                    "with SHODAN."
+                )
+                target_domains = hackertarget_dns_records(domain_name, target_domains)
+
+            elif "Invalid API key" in error_message:
+                print(
+                    "   | SHODAN API invalid. "
+                    "Check your SHODAN API key if you want to scan using SHODAN. "
+                )
+                target_domains = hackertarget_dns_records(domain_name, target_domains)
+
+            else:
+                print(f"   | Error during SHODAN search: {error_message}")
+                logger.warning(f"Error during SHODAN search: {error_message}")
+                raise e
+    else:
+        target_domains = hackertarget_dns_records(domain_name, target_domains)
 
 
-        else:
-            print(f"   | Error during SHODAN search: {error_message}")
-            logger.warning(f"Error during SHODAN search: {error_message}")
-            raise e
-
-
-    # Use SHODAN to search for the domain in the search API
-    domain_search_query = f"hostname:{domain_name}"
-    shodan_domain_search(
-        shodan_api,
-        query=domain_search_query,
-        target_domains=target_domains,
-        domain_name=domain_name,
-    )
+    if shodan_api:
+        # Use SHODAN to search for the domain in the search API
+        domain_search_query = f"hostname:{domain_name}"
+        shodan_domain_search(
+            shodan_api,
+            query=domain_search_query,
+            target_domains=target_domains,
+            domain_name=domain_name,
+        )
 
     # Search for domain name w/o suffix but with country code(s)
     if country_codes:
