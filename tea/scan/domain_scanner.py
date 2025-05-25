@@ -265,21 +265,21 @@ def domain(domain_name: str, country_codes: list[str] = None) -> list[models.Tar
             domain_name=domain_name,
         )
 
-        # Search for domain name w/o suffix but with country code(s)
-        if country_codes:
-            extracted_name = tldextract.extract(domain_name).domain
+    # Search for domain name w/o suffix but with country code(s)
+    if country_codes:
+        extracted_name = tldextract.extract(domain_name).domain
 
-            if len(country_codes) == 1:
-                country_search_query = f"{extracted_name} country:{country_codes[0]}"
-            else:
-                country_search_query = f"{extracted_name} country:{','.join(country_codes)}"
+        if len(country_codes) == 1:
+            country_search_query = f"{extracted_name} country:{country_codes[0]}"
+        else:
+            country_search_query = f"{extracted_name} country:{','.join(country_codes)}"
 
-            shodan_domain_search(
-                shodan_api,
-                query=country_search_query,
-                target_domains=target_domains,
-                domain_name=domain_name,
-            )
+        shodan_domain_search(
+            shodan_api,
+            query=country_search_query,
+            target_domains=target_domains,
+            domain_name=domain_name,
+        )
 
     # Create and sort a list[TargetHost] from the scan results
     target_hosts: list[models.TargetHost] = list(target_domains.values())
