@@ -168,6 +168,43 @@ def input_handling(unique_asn: dict[int, models.ASN], ip_map: dict[str, models.T
     return True
 
 
+def process_items(
+    items,
+    latest_scan,
+    current_count,
+    new_items_count,
+    old_items_count,
+    item_map
+):
+    """
+    Process a list of items (e.g., vulns and opts) and update statistics.
+
+    :param items: The list of items to process.
+    :param latest_scan: The latest scan.
+    :param current_count: The current count.
+    :param new_items_count: The new items count.
+    :param old_items_count: The old items count.
+    :param item_map: Map of items to targets.
+    :return: The updated counts.
+
+    """
+    for item in items:
+        created = datetime.fromisoformat(item.created_at)
+        modified = datetime.fromisoformat(item.modified_at)
+
+        if abs(latest_scan - modified) <= SCAN_TIME_DELTA:
+            current_count += 1
+            item_map[item.name] = item_map.get(item.name, 0) + 1
+
+            if created == modified:
+                new_items_count += 1
+
+            else:
+                old_items_count += 1
+
+    return current_count, new_items_count, old_items_count
+
+
 def view_exposure() -> bool:
     """
     Display the exposure data in a user-friendly overview format.
@@ -261,43 +298,23 @@ def view_exposure() -> bool:
                 # If port is old
                 old_ports_count += 1
 
-            # Map vulns
-            for vuln in port.vulns:
-                vuln_created = datetime.fromisoformat(vuln.created_at)
-                vuln_modified = datetime.fromisoformat(vuln.modified_at)
+            vulns_count, new_opt_vuln_count, old_opt_vuln_count = process_items(
+                port.vulns,
+                latest_scan,
+                vulns_count,
+                new_opt_vuln_count,
+                old_opt_vuln_count,
+                vuln_opt_map
+            )
 
-                # Check if vuln is current or not
-                if abs(latest_scan - vuln_modified) <= SCAN_TIME_DELTA:
-                    vulns_count += 1
-
-                    if vuln_created == vuln_modified:
-                        new_opt_vuln_count += 1
-
-                    # Map vulns
-                    vuln_opt_map[vuln.name] = vuln_opt_map.get(vuln.name, 0) + 1
-
-                else:
-                    # If vuln is old
-                    old_opt_vuln_count += 1
-
-            # Map opts
-            for opt in port.opts:
-                opt_created = datetime.fromisoformat(opt.created_at)
-                opt_modified = datetime.fromisoformat(opt.modified_at)
-
-                # Check if opt is current or not
-                if abs(latest_scan - opt_modified) <= SCAN_TIME_DELTA:
-                    opts_count += 1
-
-                    if opt_created == opt_modified:
-                        new_opt_vuln_count += 1
-
-                    # Map opts
-                    vuln_opt_map[opt.name] = vuln_opt_map.get(opt.name, 0) + 1
-
-                else:
-                    # If opt is old
-                    old_opt_vuln_count += 1
+            opts_count, new_opt_vuln_count, old_opt_vuln_count = process_items(
+                port.opts,
+                latest_scan,
+                opts_count,
+                new_opt_vuln_count,
+                old_opt_vuln_count,
+                vuln_opt_map
+            )
 
         # Set style based on criticality
         if vulns_count > 0:

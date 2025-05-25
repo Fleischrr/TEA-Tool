@@ -22,34 +22,14 @@ def get_shodan_api() -> shodan.Shodan | None:
     # Get SHODAN API key from the environment
     api_key = os.getenv("SHODAN_API_KEY")
 
-    if not api_key:
-        console.print(
-            "[green]TEA-Tool[/]> [cyan]SHODAN API Key[/]> [bold red]SHODAN API key not found!\n[/]"
-            "[green]TEA-Tool[/]> [cyan]SHODAN API Key[/]> "
-            "Set [yellow]SHODAN_API_KEY=<KEY>[/] in a [cyan].env[/cyan] file under the TEA-Tool "
-            "directory to store it persistently or enter it below for temporary use."
-        )
+    if api_key is None:
+        return None
 
-        try:
-            while True:
-                console.print("[green]TEA-Tool[/]> [cyan]SHODAN API Key[/]> ", end="")
-                key = input("Enter SHODAN API key: ").strip()
+    try:
+        shodan_object = shodan.Shodan(api_key)
 
-                if key and len(key) == 32:
-                    os.environ["SHODAN_API_KEY"] = key
-                    api_key = key
-                    break
-                else:
-                    console.print(
-                        "[green]TEA-Tool[/]> [cyan]SHODAN API Key[/]> Invalid key, try again."
-                    )
-                    continue
-
-        except KeyboardInterrupt:
-            console.print(
-                "[green]TEA-Tool[/]> \n\n[purple bold]Exiting TEA-Tool. Goodbye World![/]\n"
-            )
-            return None
+    except shodan.APIError:
+        return None
 
     logger.debug(f"SHODAN API key: {api_key}")
-    return shodan.Shodan(api_key)
+    return shodan_object
