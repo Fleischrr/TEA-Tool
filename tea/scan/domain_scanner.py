@@ -243,7 +243,7 @@ def domain(domain_name: str, country_codes: list[str] = None) -> list[models.Tar
         else:
             print(f"   | Error during SHODAN search: {error_message}")
             logger.warning(f"Error during SHODAN search: {error_message}")
-            raise error_message
+            raise e
 
 
     # Use SHODAN to search for the domain in the search API
