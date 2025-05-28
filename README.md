@@ -41,7 +41,7 @@ This tool empowers IT security teams with actionable insights to enhance their t
 - Python 3.12 or higher
 - A SHODAN API Key:
     - [Get your API key for free here](https://account.shodan.io/)
-    - TEA-Tool works with a free SHODAN account, but a paid account is recommended for a broader discovery results.
+    - TEA-Tool works with a free SHODAN account, but a paid account is recommended for full functionality.
 - A `.env` file within the root directory of the TEA-Tool repository.
   - This file is used to store your SHODAN API key and other configuration settings, see [Configuration](#Configuration) for more details.
   - Not directly required, but sets the API key persistently for the tool.
@@ -165,11 +165,11 @@ LOG_PATH=/custom/path/to/    # Optional
 ```
 
 **Explanation**
-- `SHODAN_API_KEY`: Your SHODAN API key. This is required for the tool to function. ([Get your API key for free here](https://account.shodan.io/))
+- `SHODAN_API_KEY`: Your SHODAN API key. This is required to utilize all of the tool's functionality. ([Get your API key here](https://account.shodan.io/))
 - `EXPOSURE_DB_PATH`: Optional path for the SQLite database file. If not specified, the default path is used.
 - `LOG_PATH`: Optional path for the log file. If not specified, the default path is used.
 
-> A paid SHODAN account is *recommended* for a broader host discovery, but is **not required**.
+> A paid SHODAN account is *recommended* for full functionality, but is **not required**.
 
 
 ## License
