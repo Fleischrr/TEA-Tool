@@ -3,8 +3,8 @@
 import logging
 from ipaddress import IPv4Address, ip_address
 
-import shodan
 import requests
+import shodan
 import tldextract
 
 from tea import models, utils
@@ -40,15 +40,13 @@ def shodan_dns_records(
     # Add valid 'A' records to target_domains
     for record in shodan_dns_rec:
         if (
-                record.get("subdomain") in shodan_subdomains
-                and record.get("value")
-                and record.get("type") == "A"
+            record.get("subdomain") in shodan_subdomains
+            and record.get("value")
+            and record.get("type") == "A"
         ):
             ip = IPv4Address(record.get("value"))
             subdomain_records = record.get("subdomain")
-            hostnames = (
-                utils.validate_subdomain([subdomain_records]) if subdomain_records else []
-            )
+            hostnames = utils.validate_subdomain([subdomain_records]) if subdomain_records else []
 
             # Check for duplicate TargetHosts
             if ip not in target_domains:
@@ -72,6 +70,7 @@ def hackertarget_dns_records(
 ) -> dict[IPv4Address, models.TargetHost] | None:
     """
     Retrieve DNS records for a given domain using the HackerTarget API.
+
     This function scans the DNS records for 'A' records associated with the
     specified domain name using the HackerTarget API. It collects valid 'A' records
     and updates the target_domains dictionary with TargetHost objects for each
@@ -84,7 +83,6 @@ def hackertarget_dns_records(
     :return: A dictionary mapping IP addresses to TargetHost objects.
     :rtype: dict[IPv4Address, models.TargetHost] | None
     """
-
     url = f"https://api.hackertarget.com/hostsearch/?q={domain_name}"
 
     try:
@@ -93,10 +91,10 @@ def hackertarget_dns_records(
         lines = response.text.splitlines()
 
         for line in lines:
-            if ',' not in line:
+            if "," not in line:
                 continue
 
-            subdomain, ip_str = line.split(',', 1)
+            subdomain, ip_str = line.split(",", 1)
 
             try:
                 ip = IPv4Address(ip_str)
@@ -126,6 +124,8 @@ def hackertarget_dns_records(
         )
         logger.warning("Error during HackerTarget DNS records retrieval.")
         raise
+
+
 def shodan_domain_search(
     shodan_api, query: str, target_domains: dict[IPv4Address, models.TargetHost], domain_name: str
 ) -> None:
@@ -147,6 +147,7 @@ def shodan_domain_search(
     """
     try:
         search_result = shodan_api.search(query=query)
+
     except shodan.APIError as e:
         error_message = str(e)
         if "Access denied (403 Forbidden)" in error_message:
@@ -225,10 +226,9 @@ def domain(domain_name: str, country_codes: list[str] = None) -> list[models.Tar
     # Group TargetHost objects by IP address
     target_domains: dict[IPv4Address, models.TargetHost] = {}
 
-
     if shodan_api:
         try:
-                target_domains = shodan_dns_records(shodan_api, domain_name, target_domains)
+            target_domains = shodan_dns_records(shodan_api, domain_name, target_domains)
 
         except shodan.APIError as e:
             error_message = str(e)
@@ -253,7 +253,6 @@ def domain(domain_name: str, country_codes: list[str] = None) -> list[models.Tar
                 raise e
     else:
         target_domains = hackertarget_dns_records(domain_name, target_domains)
-
 
     if shodan_api:
         # Use SHODAN to search for the domain in the search API
@@ -285,9 +284,6 @@ def domain(domain_name: str, country_codes: list[str] = None) -> list[models.Tar
     target_hosts: list[models.TargetHost] = list(target_domains.values())
     target_hosts = sorted(target_hosts, key=lambda host: host.ip)
 
-    print(
-        f"   | Found {len(target_hosts)} hosts from {domain_name}\n --- Domain Scan completed."
-    )
+    print(f"   | Found {len(target_hosts)} hosts from {domain_name}\n --- Domain Scan completed.")
 
     return target_hosts
-

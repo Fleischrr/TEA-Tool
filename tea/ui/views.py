@@ -168,14 +168,7 @@ def input_handling(unique_asn: dict[int, models.ASN], ip_map: dict[str, models.T
     return True
 
 
-def process_items(
-    items,
-    latest_scan,
-    current_count,
-    new_items_count,
-    old_items_count,
-    item_map
-):
+def process_items(items, latest_scan, current_count, new_items_count, old_items_count, item_map):
     """
     Process a list of items (e.g., vulns and opts) and update statistics.
 
@@ -304,7 +297,7 @@ def view_exposure() -> bool:
                 vulns_count,
                 new_opt_vuln_count,
                 old_opt_vuln_count,
-                vuln_opt_map
+                vuln_opt_map,
             )
 
             opts_count, new_opt_vuln_count, old_opt_vuln_count = process_items(
@@ -313,7 +306,7 @@ def view_exposure() -> bool:
                 opts_count,
                 new_opt_vuln_count,
                 old_opt_vuln_count,
-                vuln_opt_map
+                vuln_opt_map,
             )
 
         # Set style based on criticality

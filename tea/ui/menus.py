@@ -170,9 +170,11 @@ def help_screen():
         "Set the key in the .evn file with SHODAN_API_KEY=<key> or "
         "during startup for temporary use.\n\n"
         "  - A paid SHODAN account enables the tool to retrieve more hosts during discovery.\n"
-        "This will also enable the Full Scan with SHODAN. This is not required for the tool to function,\n"
+        "This will also enable the Full Scan with SHODAN. "
+        "This is not required for the tool to function,\n"
         "but it is recommended.\n\n"
-        "  - Will use the HackerTarget API to retrieve discovery if the SHODAN API key is non-paid.\n\n"
+        "  - Will use the HackerTarget API to retrieve discovery if the "
+        "SHODAN API key is non-paid.\n\n"
         "  - Custom paths for the SQLite database and log file can\n"
         "be set in the .env file with EXPOSURE_DB_PATH=<path> and LOG_PATH=<path>.\n"
     )
