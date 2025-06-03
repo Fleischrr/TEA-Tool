@@ -1,7 +1,9 @@
 """Provides an IP scanner that retrieves IP and detailed port information."""
 
+import json
 import logging
 
+import requests
 import shodan
 
 from tea import models, utils
@@ -9,22 +11,20 @@ from tea import models, utils
 logger = logging.getLogger(__name__)
 
 
-def ip(target: models.TargetHost) -> None:
+def shodan_paid_scan(shodan_api: shodan.Shodan, target: models.TargetHost) -> None:
     """
-    Perform an IP scan of a TargetHost by using the SHODAN API.
+    Retrieve detailed information from the paid SHODAN API.
 
     Populates the TargetHost with information such as hostnames,
     Operative Systems, organization and more.
     Ports are also populated with detailed information including protocol,
-    associated service, and vulnerabilities.
+    associated service, and vulnerabilities. Modifies the given
+    TargetHost object in place.
 
     :param target: The target host to scan.
     :type target: models.TargetHost
-    :return: None. Modifies the given TargetHost object in place.
     :raises shodan.APIError: If there is an error with the SHODAN API.
     """
-    shodan_api = utils.get_shodan_api()
-
     try:
         # Convert IPv4 to a string and retrieve IP-scan result
         scan_result = shodan_api.host(str(target.ip))
@@ -43,6 +43,10 @@ def ip(target: models.TargetHost) -> None:
                 if port.number == current_port:
                     current_port = port
                     break
+
+            if isinstance(current_port, int):
+                logger.warning(f"No match found for port {current_port}.")
+                continue
 
             # Fill port object with detailed information
             current_port.protocol = service.get("transport")
@@ -67,5 +71,61 @@ def ip(target: models.TargetHost) -> None:
             ]
 
     except shodan.APIError as e:
-        logger.warning(f"IP Scan failed for {target.ip}: {e}")
+        error_message = str(e)
+        if "Access denied (403 Forbidden)" in error_message:
+            print(
+                "  | Free SHODAN API cannot retrieve detailed IP Scan results. "
+                "Upgrade your API key to retrieve more detailed results "
+                "with SHODAN."
+            )
+            logger.info("SHODAN Key is forbidden (403), utilizing free IP Scan")
+
+            shodan_free_scan(target)
+        else:
+            print(f"   | Error during SHODAN search: {error_message}")
+            logger.error(f"Error during SHODAN search for {target.ip}: {error_message}")
+            raise
+
+
+def shodan_free_scan(target: models.TargetHost) -> None:
+    """
+    Retrieve basic information from the free SHODAN API.
+
+    Populates the TargetHost with information such as TODO: WRITE MORE
+    Modifies the given TargetHost object in place.
+
+    :param target: The target host to scan.
+    :type target: models.TargetHost
+    :raises shodan.APIError: If there is an error with the SHODAN API.
+    """
+    url = ""
+
+    try:
+        response: requests.Response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        ip_info = json.loads(response.text)
+
+    except requests.exceptions.RequestException:
+        raise
+
+    raise NotImplementedError
+
+
+def ip(target: models.TargetHost) -> None:
+    """
+    Perform an IP scan of a TargetHost by using the SHODAN API.
+
+    :param target: The target host to scan.
+    :type target: models.TargetHost
+    """
+    shodan_api = utils.get_shodan_api()
+    try:
+        if shodan_api is None:
+            shodan_free_scan(target)
+
+        else:
+            shodan_paid_scan(shodan_api, target)
+
+    except Exception as e:
+        print(e)
         return
