@@ -194,7 +194,7 @@ def shodan_domain_search(
     )
 
 
-def domain(domain_name: str, country_codes: list[str] = None) -> list[models.TargetHost] | None:
+def domain(domain_name: str, country_codes: list[str] = []) -> list[models.TargetHost] | None:
     """
     Perform a domain scan using the SHODAN API.
 
@@ -238,21 +238,22 @@ def domain(domain_name: str, country_codes: list[str] = None) -> list[models.Tar
                     "Upgrade your API key to retrieve broader results. "
                     "with SHODAN."
                 )
-                target_domains = hackertarget_dns_records(domain_name, target_domains)
+                
+                target_domains = hackertarget_dns_records(domain_name, target_domains) # type: ignore
 
             elif "Invalid API key" in error_message:
                 print(
                     "   | SHODAN API invalid. "
                     "Check your SHODAN API key if you want to scan using SHODAN. "
                 )
-                target_domains = hackertarget_dns_records(domain_name, target_domains)
+                target_domains = hackertarget_dns_records(domain_name, target_domains) # type: ignore
 
             else:
                 print(f"   | Error during SHODAN search: {error_message}")
                 logger.warning(f"Error during SHODAN search: {error_message}")
                 raise e
     else:
-        target_domains = hackertarget_dns_records(domain_name, target_domains)
+        target_domains = hackertarget_dns_records(domain_name, target_domains) # type: ignore
 
     if shodan_api:
         # Use SHODAN to search for the domain in the search API
@@ -265,7 +266,7 @@ def domain(domain_name: str, country_codes: list[str] = None) -> list[models.Tar
         )
 
     # Search for domain name w/o suffix but with country code(s)
-    if country_codes:
+    if shodan_api and country_codes:
         extracted_name = tldextract.extract(domain_name).domain
 
         if len(country_codes) == 1:

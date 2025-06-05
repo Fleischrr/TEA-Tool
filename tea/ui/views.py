@@ -87,7 +87,7 @@ def gen_asn_summary(unique_asn: dict[int, models.ASN]):
     input("Press any key to return...")
 
 
-def gen_top_stats(label: str, data: dict, unit: str = "host(s)", key_formatter: callable = str):
+def gen_top_stats(label: str, data: dict, unit: str = "host(s)", key_formatter: callable = str): # type: ignore
     """
     Generate a summary of the top statistics from the exposure data.
 
@@ -239,10 +239,10 @@ def view_exposure() -> bool:
     host_w_vulns: int = 0
     host_w_opts: int = 0
 
-    latest_scan = max(
+    latest_scan: datetime = max(
         (datetime.fromisoformat(host.modified_at) for host in exposure if host.modified_at),
         default=None,
-    )
+    ) # type: ignore
 
     for host in exposure:
         ip_map[str(host.ip)] = host
@@ -357,7 +357,7 @@ def view_exposure() -> bool:
             port_text,
             host.domain or "-",
             host.org or "-",
-            host.asn.number,
+            host.asn.number if host.asn else "N/A",
             str(vulns_count + opts_count),
             vuln_opt_text,
             style=row_style,
