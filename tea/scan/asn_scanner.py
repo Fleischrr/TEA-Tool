@@ -23,7 +23,6 @@ def asn(target: models.TargetHost) -> None:
     :type target: models.TargetHost
     :raises requests.exceptions.RequestException: If error with the HackerTarget API.
     """
-
     url: str = f"https://api.hackertarget.com/aslookup/?q={target.ip}&output=json&details=true"
     try:
         # Receive ASN data from given TargetHost.
@@ -54,10 +53,12 @@ def asn(target: models.TargetHost) -> None:
                 except ValueError:
                     logger.debug(f"Skipping non IPv4 subnet: {subnet}")
                     continue
+
             logger.debug(
                 f"Retrieved ASN data for {target.ip}: "
                 f"AS{target.asn.number} with {len(asn_subnets)} subnets."
             )
+
         else:
             logger.debug(
                 f"AS{target.asn.number} has too many subnets ({len(asn_subnets)}) to process."

@@ -41,7 +41,11 @@ def full(
         print(" | Existing exposure retrieved.")
 
     else:
-        exposure = scan.discovery(domain, country_codes, save=False)
+        exposure = scan.discovery(domain, country_codes, save=False)  # type: ignore
+
+    if not exposure:
+        print(" | No hosts discovered during discovery scan.\n - Full Scan completed.")
+        return []
 
     print(f"`-- Starting IP scan for {len(exposure)} hosts...")
     with Progress() as progress:

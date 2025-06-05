@@ -57,9 +57,12 @@ def menu_screen() -> bool:
                     if not domain:
                         break
 
-                    scan.discovery(domain=domain, country_codes=country_codes, save=save)
+                    scan.discovery(domain=domain, country_codes=country_codes, save=save)  # type: ignore
                     ui.schedule_scan_menu(
-                        scan_type="discovery", domain=domain, country_codes=country_codes, save=save
+                        scan_type="discovery",
+                        domain=domain,
+                        country_codes=country_codes,
+                        save=save,  # type: ignore
                     )
 
                     input("Press Enter to continue...")
@@ -77,18 +80,18 @@ def menu_screen() -> bool:
 
                     # Perform scan according to user input
                     if domain:
-                        scan.full(domain=domain, country_codes=country_codes, save=save)
+                        scan.full(domain=domain, country_codes=country_codes, save=save)  # type: ignore
                     elif use_existing:
-                        scan.full(use_existing=use_existing, save=save)
+                        scan.full(use_existing=use_existing, save=save)  # type: ignore
                     else:
                         break
 
                     ui.schedule_scan_menu(
                         scan_type="full",
-                        domain=domain if not use_existing else None,
-                        country_codes=country_codes if not use_existing else [],
-                        use_existing=use_existing,
-                        save=save,
+                        domain=domain if not use_existing else None,  # type: ignore
+                        country_codes=country_codes if not use_existing else [],  # type: ignore
+                        use_existing=use_existing,  # type: ignore
+                        save=save,  # type: ignore
                     )
 
                     input("Press Enter to continue...")
@@ -166,13 +169,14 @@ def help_screen():
     help_text.append(
         "  - Scans do not interact directly with the targets,\n"
         "data is collected from SHODAN or other public sources.\n\n"
-        "  - A valid SHODAN API key is required for the tool to function.\n"
+        "  - A paid SHODAN API key will retrieve more detailed information.\n"
         "Set the key in the .evn file with SHODAN_API_KEY=<key> or "
         "during startup for temporary use.\n\n"
-        "  - A paid SHODAN account enables the tool to retrieve more hosts during discovery.\n"
-        "This will also enable the Full Scan with SHODAN. This is not required for the tool to function,\n"
-        "but it is recommended.\n\n"
-        "  - Will use the HackerTarget API to retrieve discovery if the SHODAN API key is non-paid.\n\n"
+        "  - A paid SHODAN API key enables the tool to retrieve more hosts during discovery.\n\n"
+        "  - A paid SHODAN API key IS NOT required for the tool to function,\n"
+        "but it is recommended for the full intended functionality.\n\n"
+        "  - Will use the HackerTarget API to retrieve discovery if the "
+        "SHODAN API key is non-paid.\n\n"
         "  - Custom paths for the SQLite database and log file can\n"
         "be set in the .env file with EXPOSURE_DB_PATH=<path> and LOG_PATH=<path>.\n"
     )
