@@ -86,12 +86,14 @@ def gen_info_panel() -> Panel:
 
     # Additional info
     info.append("\n[!!] ", style="bold yellow")
-    info.append("A Shodan API key is recommended for full functionality.\n", style="yellow")
+    info.append(
+        "A Shodan API key is recommended for the full retrieval of details.\n", style="yellow"
+    )
 
     info.append("\n[!!] ", style="bold yellow")
-    info.append("Remember to set the API key in a file under the TEA-Tool directory named ")
+    info.append("Set the SHODAN API key in a file under the TEA-Tool directory named ")
     info.append(".env ", style="bold yellow")
-    info.append("to store the API key persistently.")
+    info.append("to apply the API key persistently.")
 
     # Usage info
     info.append("\n\n\n  General:\n\n")
@@ -140,13 +142,13 @@ def show_welcome_screen():
 
             # Move logo into the welcome panel
             row.split_row(logo, welcome)
-            row["logo"].update(gen_logo_panel())
+            row["logo"].update(gen_logo_panel())  # type: ignore
             output.split(row, info)
 
         else:
             # Standard logo layout
             output.split_row(logo, right_column)
-            output["logo"].update(gen_logo_panel())
+            output["logo"].update(gen_logo_panel())  # type: ignore
 
     else:
         # Smallest layout if no logos can be generated

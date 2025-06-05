@@ -9,7 +9,9 @@ from tea.models.asn import ASN
 logger = logging.getLogger(__name__)
 
 
-def asn_lookup(exposure: list[models.TargetHost]) -> dict[IPv4Network, ASN]:
+def asn_lookup(
+    exposure: list[models.TargetHost],
+) -> tuple[dict[IPv4Network, ASN], set[IPv4Network]]:
     """
     Perform an ASN lookup for a list of TargetHost objects (exposure).
 
@@ -25,7 +27,8 @@ def asn_lookup(exposure: list[models.TargetHost]) -> dict[IPv4Network, ASN]:
     print(f"`--- ASN scan started for {len(exposure)} hosts...")
 
     # Group hosts by IP address into subnets
-    subnets = utils.group_ips(exposure)
+    subnets = utils.group_ips(exposure, subnet_mask=24)
+    failed_subnets: set[IPv4Network] = set()
 
     if len(subnets) > 10:
         logger.warning(
@@ -41,8 +44,14 @@ def asn_lookup(exposure: list[models.TargetHost]) -> dict[IPv4Network, ASN]:
         representative_ip = subnet.network_address
 
         try:
-            tmp_host = models.TargetHost(representative_ip)
+            tmp_host = models.TargetHost(ip=representative_ip)
             scan.asn(tmp_host)
+
+            # ASN scan fails
+            if tmp_host.asn is None:
+                logger.warning(f"ASN Scan failed for {representative_ip}")
+                failed_subnets.add(subnet)
+                continue
 
             # Check if ASN is already in the results
             existing_asn = next(
@@ -60,10 +69,14 @@ def asn_lookup(exposure: list[models.TargetHost]) -> dict[IPv4Network, ASN]:
             logger.warning(f"ASN scan failed for {subnet}: {e}")
             continue
 
-    return asn_results
+    return asn_results, failed_subnets
 
 
-def assign_asn(exposure: list[models.TargetHost], asn_results: dict[IPv4Network, ASN]) -> None:
+def assign_asn(
+    exposure: list[models.TargetHost],
+    asn_results: dict[IPv4Network, ASN],
+    failed_subnets: set[IPv4Network],
+) -> None:
     """
     Assign ASN information to a list of TargetHost objects (exposure).
 
@@ -82,6 +95,9 @@ def assign_asn(exposure: list[models.TargetHost], asn_results: dict[IPv4Network,
 
         # For each ASN result check if host is in that subnet
         for _subnet, asn in asn_results.items():
+            if not asn or not asn.subnets:
+                continue
+
             if any(target_host.ip in asn_subnet for asn_subnet in asn.subnets):
                 target_host.asn = asn
                 unique_asn.add(target_host.asn.number)
@@ -90,6 +106,14 @@ def assign_asn(exposure: list[models.TargetHost], asn_results: dict[IPv4Network,
 
         # If not in known ASN subnet, perform a new ASN lookup
         if not assigned:
+            # Skip if subnet failed ASN scan
+            host_subnet = IPv4Network((target_host.ip, 24), strict=False)
+            if host_subnet in failed_subnets:
+                logger.debug(
+                    f"Skipping fallback ASN lookup for {target_host.ip} (subnet already failed)"
+                )
+                continue
+
             try:
                 scan.asn(target_host)
 
@@ -109,7 +133,7 @@ def assign_asn(exposure: list[models.TargetHost], asn_results: dict[IPv4Network,
                     asn_results[target_host.asn.subnets[0]] = target_host.asn
                     logger.debug(f"Found new AS{target_host.asn.number} from {target_host.ip}")
 
-                unique_asn.add(target_host.asn.number)
+                unique_asn.add(target_host.asn.number)  # type: ignore
                 assigned = True
 
             except Exception as e:
@@ -143,15 +167,18 @@ def discovery(
         print(f"`-- Starting Discovery Scan for domain: {domain}")
 
         # Retrieve subdomains from the domain name
-        target_hosts = scan.domain(domain, country_codes)
+        if country_codes is not None:
+            target_hosts = scan.domain(domain, country_codes)
+        else:
+            target_hosts = scan.domain(domain)
 
         if not target_hosts:
             logger.warning(f"No hosts discovered for {domain}")
             return None
 
         # Perform ASN lookup and assign information for each host
-        asn_results = asn_lookup(target_hosts)
-        assign_asn(target_hosts, asn_results)
+        asn_results, failed_subnets = asn_lookup(target_hosts)
+        assign_asn(target_hosts, asn_results, failed_subnets)
 
         if save:
             print("`--- Saving results to database...")

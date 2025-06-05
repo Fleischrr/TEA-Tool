@@ -31,5 +31,4 @@ def get_shodan_api() -> shodan.Shodan | None:
     except shodan.APIError:
         return None
 
-    logger.debug(f"SHODAN API key: {api_key}")
     return shodan_object

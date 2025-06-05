@@ -2,6 +2,7 @@
 
 import logging
 
+import requests
 import shodan
 
 from tea import models, utils
@@ -9,22 +10,20 @@ from tea import models, utils
 logger = logging.getLogger(__name__)
 
 
-def ip(target: models.TargetHost) -> None:
+def shodan_paid_scan(shodan_api: shodan.Shodan, target: models.TargetHost) -> None:
     """
-    Perform an IP scan of a TargetHost by using the SHODAN API.
+    Retrieve detailed information from the paid SHODAN API.
 
     Populates the TargetHost with information such as hostnames,
     Operative Systems, organization and more.
     Ports are also populated with detailed information including protocol,
-    associated service, and vulnerabilities.
+    associated service, and vulnerabilities. Modifies the given
+    TargetHost object in place. Runs the free scan if API key is not sufficiant.
 
     :param target: The target host to scan.
     :type target: models.TargetHost
-    :return: None. Modifies the given TargetHost object in place.
     :raises shodan.APIError: If there is an error with the SHODAN API.
     """
-    shodan_api = utils.get_shodan_api()
-
     try:
         # Convert IPv4 to a string and retrieve IP-scan result
         scan_result = shodan_api.host(str(target.ip))
@@ -43,6 +42,10 @@ def ip(target: models.TargetHost) -> None:
                 if port.number == current_port:
                     current_port = port
                     break
+
+            if isinstance(current_port, int):
+                logger.warning(f"No match found for port {current_port}.")
+                continue
 
             # Fill port object with detailed information
             current_port.protocol = service.get("transport")
@@ -67,5 +70,76 @@ def ip(target: models.TargetHost) -> None:
             ]
 
     except shodan.APIError as e:
-        logger.warning(f"IP Scan failed for {target.ip}: {e}")
-        return
+        logger.error(f"Error during SHODAN API search for {target.ip}: {e}")
+        raise
+
+
+def shodan_free_scan(target: models.TargetHost) -> None:
+    """
+    Retrieve basic information from the free SHODAN API.
+
+    Populates the TargetHost with basic information such as open ports,
+    hostnames, and vulnerabilities. Modifies the given TargetHost object in place.
+
+    :param target: The target host to scan.
+    :type target: models.TargetHost
+    :raises requests.exceptions.RequestException: If the InternetDB request fails.
+    """
+    url = f"https://internetdb.shodan.io/{target.ip}"
+
+    try:
+        response: requests.Response = requests.get(url, timeout=10)
+
+        if response.status_code == 404:
+            logger.warning(f"No data found for {target.ip} in InternetDB.")
+            return
+
+        response.raise_for_status()
+        ip_info = response.json()
+
+        # Populate hostnames
+        hostnames = ip_info.get("hostnames", [])
+        target.add_hostnames(utils.validate_subdomain(hostnames))
+
+        # Ports
+        ports = ip_info.get("ports", [])
+        target.add_ports(ports)
+
+        # Vulns
+        # If a vuln exist on a port, all other ports will display the same vuln.
+        # TODO: Find a solution for this, ok as of now because its free.
+        vulns = ip_info.get("vulns", [])
+        port_vulns = [models.PortVuln(name=vuln) for vuln in vulns]
+
+        for port in target.ports:
+            port.vulns = port_vulns
+
+    except requests.exceptions.RequestException as e:
+        print(f"   | Error during SHODAN db search: {e}")
+        logger.error(f"Error during SHODAN db search for {target.ip}: {e}")
+        raise
+
+
+def ip(target: models.TargetHost) -> None:
+    """
+    Perform an IP scan of a TargetHost by using the SHODAN API.
+
+    :param target: The target host to scan.
+    :type target: models.TargetHost
+    """
+    shodan_api = utils.get_shodan_api()
+
+    try:
+        if shodan_api is not None:
+            shodan_paid_scan(shodan_api, target)
+
+        else:
+            raise ValueError("SHODAN API not configured.")
+
+    except (shodan.APIError, ValueError) as e:
+        if "403" in str(e) or isinstance(e, ValueError) or "No information available":
+            logger.debug(f"Falling back to InternetDB API for {target.ip} (reason: {e})")
+            shodan_free_scan(target)
+        else:
+            print(f"   | Error during SHODAN search: {e}")
+            raise
