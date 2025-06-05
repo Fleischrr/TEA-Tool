@@ -5,7 +5,7 @@
 # *Threat Exposure Analysis Tool* (TEA-Tool)
 
 *"Design and develop an automated tool that identifies and continuously monitors an organization’s external digital exposure, 
-helping to strengthen cybersecurity efforts and reduce the risk of cyberattacks by providing timely insights to stakeholders."*
+helping strengthen cybersecurity efforts and reduce the risk of cyberattacks by providing timely insights to stakeholders."*
 
 
 
@@ -35,13 +35,19 @@ The TEA-Tool aims to provide a continuous or on-demand overview of this external
 This tool empowers IT security teams with actionable insights to enhance their threat intelligence and overall security posture.
 
 >*"You can't protect what you don't know about."*
+---
+**_But Also:_**
 
+TEA-Tool does also work very well for offensive purposes:
+  - _You_ only need to supply a _domain name_ to retrieve an overview and possible vulnerabilities for the _entire related infrastructure_.
+  - The tool is based on passive OSINT from an _Intelligence Gathering_ phase of a security assessment/pen-test/cyberattack
+    - So, you could possibly automate a part of your security assessment/pen-test ;) 
 
 ## Requirements
 - Python 3.12 or higher
-- A SHODAN API Key:
-    - [Get your API key for free here](https://account.shodan.io/)
-    - TEA-Tool works with a free SHODAN account, but a paid account is recommended for full functionality.
+- A paid SHODAN API Key is recommended for fully detailed results:
+    - [Get your API key here](https://account.shodan.io/) (the free key does not have sufficient access)
+- TEA-Tool still works with no SHODAN account, but as mentioned, a paid SHODAN key is recommended for full detail.
 - A `.env` file within the root directory of the TEA-Tool repository.
   - This file is used to store your SHODAN API key and other configuration settings, see [Configuration](#Configuration) for more details.
   - Not directly required, but sets the API key persistently for the tool.
@@ -88,14 +94,14 @@ where the **Main Usage** is the default and recommended method for most users:
 
 This will display the TEA-Tool's main menu *User Interface* (UI) with instructions.
 More explanation of the tool's UI usage is available within the main menu,
-or in the documentations under the docs folder.
+or in the documentation under the docs folder.
 
 Launch the tool with:
 ```sh
 python tea_tool.py
 ```
 
-This will display one of three  main menus, depending on terminal size, where you can choose between the TEA-Tool's features:
+This will display one of three main menus, depending on terminal size, where you can choose between the TEA-Tool's features:
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/056015c9-46ab-4933-b232-fc9239ff6a78" width=100% height=100% > 
@@ -144,17 +150,17 @@ This file is not included in the repository for security reasons.
 
 The file is structured as follows:
 ```
-SHODAN_API_KEY=your_api_key    # REQUIRED
+SHODAN_API_KEY=your_api_key    # Optional
 EXPOSURE_DB_PATH=/custom/path/to/db.sqlite    # Optional
 LOG_PATH=/custom/path/to/    # Optional
 ```
 
 **Explanation**
-- `SHODAN_API_KEY`: Your SHODAN API key. This is required to utilize all of the tool's functionality. ([Get your API key here](https://account.shodan.io/))
+- `SHODAN_API_KEY`: Your SHODAN API key. This is optional but recommended to get all of the tool's details. ([Get your API key here](https://account.shodan.io/))
 - `EXPOSURE_DB_PATH`: Optional path for the SQLite database file. If not specified, the default path is used.
 - `LOG_PATH`: Optional path for the log file. If not specified, the default path is used.
 
-> A paid SHODAN account is *recommended* for full functionality, but is **not required**.
+> A paid SHODAN account is *recommended* for full detail, but is **not required** for the tool to function.
 
 
 ## License
