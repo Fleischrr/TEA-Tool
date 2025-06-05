@@ -194,7 +194,7 @@ def shodan_domain_search(
     )
 
 
-def domain(domain_name: str, country_codes: list[str] = []) -> list[models.TargetHost] | None:
+def domain(domain_name: str, country_codes: list[str] = None) -> list[models.TargetHost] | None:  # type: ignore
     """
     Perform a domain scan using the SHODAN API.
 
@@ -238,22 +238,22 @@ def domain(domain_name: str, country_codes: list[str] = []) -> list[models.Targe
                     "Upgrade your API key to retrieve broader results. "
                     "with SHODAN."
                 )
-                
-                target_domains = hackertarget_dns_records(domain_name, target_domains) # type: ignore
+
+                target_domains = hackertarget_dns_records(domain_name, target_domains)  # type: ignore
 
             elif "Invalid API key" in error_message:
                 print(
                     "   | SHODAN API invalid. "
                     "Check your SHODAN API key if you want to scan using SHODAN. "
                 )
-                target_domains = hackertarget_dns_records(domain_name, target_domains) # type: ignore
+                target_domains = hackertarget_dns_records(domain_name, target_domains)  # type: ignore
 
             else:
                 print(f"   | Error during SHODAN search: {error_message}")
                 logger.warning(f"Error during SHODAN search: {error_message}")
                 raise e
     else:
-        target_domains = hackertarget_dns_records(domain_name, target_domains) # type: ignore
+        target_domains = hackertarget_dns_records(domain_name, target_domains)  # type: ignore
 
     if shodan_api:
         # Use SHODAN to search for the domain in the search API

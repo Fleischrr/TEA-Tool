@@ -133,7 +133,7 @@ def assign_asn(
                     asn_results[target_host.asn.subnets[0]] = target_host.asn
                     logger.debug(f"Found new AS{target_host.asn.number} from {target_host.ip}")
 
-                unique_asn.add(target_host.asn.number)    # type: ignore
+                unique_asn.add(target_host.asn.number)  # type: ignore
                 assigned = True
 
             except Exception as e:
