@@ -44,21 +44,30 @@ TEA-Tool does also work very well for offensive purposes:
     - So, you could possibly automate a part of your security assessment/pen-test ;) 
 
 ## Requirements
-- Python 3.12 or higher
-- A paid SHODAN API Key is recommended for fully detailed results:
-    - [Get your API key here](https://account.shodan.io/) (the free key does not have sufficient access)
-- TEA-Tool still works with no SHODAN account, but as mentioned, a paid SHODAN key is recommended for full detail.
+- Python 3.12 or higher (have been verified, but older versions may still work)
+
+- This guide assumes a Linux environment (Debian-based, other may work), but the tool should also work on Windows as well.
+
+- TEA-Tool works for **free**, **without** any API keys, but:
+  - A paid SHODAN API Key is recommended for fully detailed results:
+      - [Get your API key here](https://account.shodan.io/) (the free key does not have sufficient access)
+
 - A `.env` file within the root directory of the TEA-Tool repository.
+  - Not directly required, but this file applies the API key persistently for the tool.
   - This file is used to store your SHODAN API key and other configuration settings, see [Configuration](#Configuration) for more details.
-  - Not directly required, but sets the API key persistently for the tool.
-- This guide assumes a Linux environment (Debian-based), but the tool works on Windows as well.
 
 
 ## Installation
-Clone the repository as normal:
+The TEA-Tool currently support two different ways of installation.
+- [Standard Install](#standard-install), is the default installation method.
+- [Docker Install](#docker-install) (easiest method), is an alternative method allowing for the containeration of the TEA-Tool.
+
+For both installation methods, clone the repository as normal:
 ```sh
 git clone https://github.com/Fleischrr/TEA-Tool.git
 ```
+
+#### Standard Install
 It is recommended to use a Virtualenv to avoid dependency conflicts with other Python projects.
 For installation methods not using Virtualenv, you already know what you're doing.
 
@@ -81,6 +90,18 @@ pip3 install -r requirements.txt
 ```
 
 
+### Docker Install
+Here is an example to use docker container as an installation method.
+After cloning the repository, within the cloned repo, run these docker commands to build the TEA-Tool.
+
+Build and run the TEA-Tool:
+```sh
+docker compose build
+
+docker compose up -d
+```
+
+
 ## Usage
 The TEA-Tool is designed to be run from the *Command Line Interface* (CLI).
 It can be used in two ways: **Main Usage** and **Headless Usage**, 
@@ -100,8 +121,14 @@ Launch the tool with:
 ```sh
 python tea_tool.py
 ```
+Or if installed with Docker, run this command to enter into the TEA-Tool main menu within the container (`CTRL+d` to exit container):
+```sh
+docker compose exec tea-tool bash
+```
+>NOTE: One can potentially make an alias or wrapper for this command to simplify tool startup if wanted. (i.e. `alias tea-tool="docker compose exec tea-tool bash"`)
 
-This will display one of three main menus, depending on terminal size, where you can choose between the TEA-Tool's features:
+
+After starting the tooll, it will display one of three main menus, depending on terminal size, where you can choose between the TEA-Tool's features:
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/056015c9-46ab-4933-b232-fc9239ff6a78" width=100% height=100% > 

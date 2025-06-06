@@ -1,0 +1,7 @@
+
+services:
+  tea-tool:
+    build: .
+    container_name: tea_tool
+    stdin_open: true
+    tty: true
