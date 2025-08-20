@@ -4,17 +4,17 @@
 
 # *Threat Exposure Analysis Tool* (TEA-Tool)
 
-*"Design and develop an automated tool that identifies and continuously monitors an organization’s external digital exposure, 
-helping strengthen cybersecurity efforts and reduce the risk of cyberattacks by providing timely insights to stakeholders."*
+**An automated tool that identifies and continuously monitors an organization’s external digital exposure, 
+helping strengthen cybersecurity efforts and reduce the risk of cyberattacks by providing insights to stakeholders.**
 
 
 
 ## Table of Contents
 - [Introduction](#Introduction)
+- [Features](#Features)
 - [Requirements](#Requirements)
 - [Installation](#Installation)
 - [Usage](#Usage)
-- [Features](#Features)
 - [Configuration](#Configuration)
 - [License](#License)
 
@@ -24,7 +24,7 @@ The *Threat Exposure Analysis Tool* (TEA-Tool) was developed as part of a bachel
 to explore the *Intelligence Gathering* phase of a cyberattack or security assessment with a defensive perspective.
 
 In cybersecurity, an organization's digital footprint is often the first target during reconnaissance by *Threat Actors* (TAs).
-The TEA-Tool aims to provide a continuous or on-demand overview of this external exposure by:
+This tool aims to provide a continuous or on-demand overview of this external exposure by:
 
 - Identifying publicly accessible IPs, ports, and services
 - Highlighting potential vulnerabilities and relevant metadata
@@ -35,26 +35,36 @@ The TEA-Tool aims to provide a continuous or on-demand overview of this external
 This tool empowers IT security teams with actionable insights to enhance their threat intelligence and overall security posture.
 
 >*"You can't protect what you don't know about."*
----
+
 **_But Also:_**
 
 TEA-Tool does also work very well for offensive purposes:
-  - _You_ only need to supply a _domain name_ to retrieve an overview and possible vulnerabilities for the _entire related infrastructure_.
+  - You only need to supply a _domain name_ to retrieve an overview and possible vulnerabilities for the target's _entire related infrastructure_.
   - The tool is based on passive OSINT from an _Intelligence Gathering_ phase of a security assessment/pen-test/cyberattack
-    - So, you could possibly automate a part of your security assessment/pen-test ;) 
+    - So, this tool could possibly automate a part of your security assessment/pen-test ;) 
+
+## Features
+- **Discovery Scan**: Uses SHODAN and HackerTarget to identify hostnames, IPs, and ASNs.
+- **Full Scan**: Builds on Discovery Scan with the retrieval of port, service, vulnerability and other metadata.
+- **Exposure Viewer**: Summarizes or details the exposure found.
+- **Scheduled Scans**: Run scans automatically using a saved configuration file.
+- **CSV Export**: Export exposure results to a CSV file for further analysis.
+
+---
 
 ## Requirements
 - Python 3.12 or higher (have been verified, but older versions may still work)
 
-- This guide assumes a Linux environment (Debian-based, other may work), but the tool should also work on Windows as well.
+- This guide assumes a Linux environment (Debian-based)
 
-- TEA-Tool works for **free**, **without** any API keys, but:
-  - A paid SHODAN API Key is recommended for fully detailed results:
-      - [Get your API key here](https://account.shodan.io/) (the free key does not have sufficient access)
+- TEA-Tool works for **free**, without any API keys, but:
+  - (optional) A paid SHODAN API Key is recommended for fully detailed results
+      - [Get your API key here](https://account.shodan.io/) (the free API key does not have sufficient access)
 
-- A `.env` file within the root directory of the TEA-Tool repository.
+- (optional) A `.env` file within the root directory of the TEA-Tool repository.
   - Not directly required, but this file applies the API key persistently for the tool.
   - This file is used to store your SHODAN API key and other configuration settings, see [Configuration](#Configuration) for more details.
+
 
 
 ## Installation
@@ -71,7 +81,7 @@ git clone https://github.com/Fleischrr/TEA-Tool.git
 It is recommended to use a Virtualenv to avoid dependency conflicts with other Python projects.
 For installation methods not using Virtualenv, you already know what you're doing.
 
-Verify or install Python Virtualenv with (note Python v3.12 is used in this example):
+Verify or install Python Virtualenv with (note Python `3.12` is used in this example):
 ```sh
 sudo apt install python3.12-venv
 ```
@@ -161,15 +171,6 @@ Optional arguments:
   -x, --export ../path/to/output.csv
                         Path to exported TEA exposure data (CSV format)
 ```
-
-
-## Features
-- **Discovery Scan**: Uses SHODAN and HackerTarget to identify hostnames, IPs, and ASNs.
-- **Full Scan**: Builds on Discovery Scan with the retrieval of port, service, vulnerability and other metadata.
-- **Exposure Viewer**: Summarizes or details the exposure found.
-- **Scheduled Scans**: Run scans automatically using a saved configuration file.
-- **CSV Export**: Export exposure results to a CSV file for further analysis.
-
 
 ## Configuration
 The configuration file is read from the root directory with the file name `.env`.
