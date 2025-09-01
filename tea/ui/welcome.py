@@ -101,6 +101,8 @@ def gen_info_panel() -> Panel:
     info.append("View Exposure", style="cyan")
     info.append("\t[h]: ", style="bold white")
     info.append("Help", style="cyan")
+    info.append("\t[c]: ", style="bold white")
+    info.append("Configuration", style="cyan")
     info.append("\t[q]: ", style="bold white")
     info.append("Quit", style="cyan")
 
