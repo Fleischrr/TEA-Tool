@@ -3,16 +3,20 @@
 import logging
 import os
 import sqlite3
+from pathlib import Path
+
+from dotenv import get_key
 
 from tea import models
 from tea.db import insert, schema
 
 logger = logging.getLogger(__name__)
 
+TEA_ROOT = Path(os.getenv("TEA_ROOT", os.getcwd())) 
 
 def get_connection() -> sqlite3.Connection | None:
     """Create a connection to the SQLite database."""
-    db_path: str = os.getenv("EXPOSURE_DB_PATH")
+    db_path = str(get_key(dotenv_path=TEA_ROOT / ".env", key_to_get="EXPOSURE_DB_PATH"))
 
     try:
         conn = sqlite3.connect(db_path)

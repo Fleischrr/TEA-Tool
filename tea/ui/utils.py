@@ -1,9 +1,7 @@
 """Handles the utility views of the TEA-Tool."""
 
-import os
-from pathlib import Path
+import logging
 
-from dotenv import set_key
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -11,7 +9,9 @@ from rich.text import Text
 
 from tea import utils
 
+logger = logging.getLogger(__name__)
 console = Console()
+
 
 def config_screen():
     """Display the configuration view for the TEA-Tool."""
@@ -22,27 +22,37 @@ def config_screen():
             "[green]TEA-Tool[/]> [cyan]Configuration[/] > "
             "What do you want to [yellow]configure[/]?",
             default="q",
-            choices=["a", "q"],
+            choices=["s", "q"],
             case_sensitive=False,
         )
+
+        if choice == "s":
+            # SHODAN API key configuration  
+            shodan_api_key = Prompt.ask(
+                "[green]TEA-Tool[/]> [cyan]Configuration[/] > [yellow]SHODAN API Key:[/]",
+                default="",
+            )
+            logger.debug(f"Recieved SHODAN API key: {shodan_api_key}")
+
+            if shodan_api_key is not None:
+                shodan_status = utils.set_shodan_api(shodan_api_key)
+                
+                if shodan_status:
+                    console.print(
+                    "[green]TEA-Tool[/]> [cyan]Configuration[/] > "
+                    "[bold yellow]SHODAN API key set successfully![/]"
+                    )
+                    logger.debug(f"SHODAN API key {shodan_api_key} set successfully.")
+                
+                else:
+                    console.print(
+                        "[green]TEA-Tool[/]> [cyan]Configuration[/] > "
+                        "[bold red]Failed to set SHODAN API key![/]"
+                    )
         
-        if not choice:
-            continue
-        break
-
-    tea_root  = Path(str(os.getenv("TEA_ROOT")))
-
-    if choice == "a":
-        shodan_api_key = Prompt.ask(
-            "[green]TEA-Tool[/]> [cyan]Configuration[/] > [yellow]SHODAN API Key:[/]",
-            default="",
-        )
-        if shodan_api_key is not None:
-           set_key(dotenv_path=tea_root / ".env", key_to_set="SHODAN_API_KEY", value_to_set=shodan_api_key)
-           shodan_key_appllied = utils.get_shodan_api
-
-    elif choice == "q":
-        return False
+        elif choice == "q":
+            # Quit
+            return False
 
 
 def help_screen():
