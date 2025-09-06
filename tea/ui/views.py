@@ -220,13 +220,11 @@ def view_exposure() -> bool:
     table = Table(title="Exposure Overview", title_style="bold cyan")
     table.add_column("IP Address", style="bold white")
     table.add_column("Hostnames", justify="right")
-    table.add_column("Ports", justify="right")
-    table.add_column("Trend", justify="center")
+    table.add_column("Ports [dim]([green]+[/]/[red]-[/])[/]", justify="center")
     table.add_column("Domain", style="dim")
     table.add_column("Organization", style="dim")
     table.add_column("ASN", style="cyan")
-    table.add_column("Opts/vulns", style="yellow", justify="right")
-    table.add_column("Trend", justify="center")
+    table.add_column("Notes [dim]([green]+[/]/[red]-[/])[/]", style="yellow", justify="center")
 
     # Different maps and counters for statistics
     ip_map = {}  # IP -> TargetHost
@@ -336,7 +334,7 @@ def view_exposure() -> bool:
             port_text += f"[red]↓{old_ports_count}[/]"
 
         if new_ports_count == 0 and old_ports_count == 0:
-            port_text += "-"
+            port_text += "[dim]0[/]"
 
         # Generate vuln/opt trend text
         vuln_opt_text = ""
@@ -347,19 +345,17 @@ def view_exposure() -> bool:
             vuln_opt_text += f"[red]↓{old_opt_vuln_count}[/]"
 
         if new_opt_vuln_count == 0 and old_opt_vuln_count == 0:
-            vuln_opt_text += "-"
+            vuln_opt_text += "[dim]0[/]"
 
         # Set the row order
         table.add_row(
             ip_text,
             str(len(host.hostnames)),
-            str(len(host.ports)),
-            port_text,
+            str(len(host.ports)) + f" ({port_text})",
             host.domain or "-",
             host.org or "-",
             host.asn.number if host.asn else "N/A",
-            str(vulns_count + opts_count),
-            vuln_opt_text,
+            str(vulns_count + opts_count) + f" ({vuln_opt_text})",
             style=row_style,
         )
 
