@@ -59,24 +59,27 @@ def execute_sql(sql: str, rows: list[tuple]) -> bool:
     if len(rows) == 1:
         row = rows[0]
 
-    try:
-        cursor = conn.cursor()
+    if conn:
+        try:
+            cursor = conn.cursor()
 
-        if row is not None:
-            cursor.execute(sql, row)
-            conn.commit()
-            return cursor.rowcount == 1
-        else:
-            cursor.executemany(sql, rows)
-            conn.commit()
-            return cursor.rowcount == len(rows)
+            if row is not None:
+                cursor.execute(sql, row)
+                conn.commit()
+                return cursor.rowcount == 1
+            else:
+                cursor.executemany(sql, rows)
+                conn.commit()
+                return cursor.rowcount == len(rows)
 
-    except sqlite3.IntegrityError as e:
-        logger.error(f"Database insert failed: {e}")
-        return False
+        except sqlite3.IntegrityError as e:
+            logger.error(f"Database insert failed: {e}")
+            return False
 
-    finally:
-        conn.close()
+        finally:
+            conn.close()
+    
+    return True
 
 
 def save_discovery(exposure: list[models.TargetHost]) -> bool:
@@ -145,45 +148,46 @@ def save_full(exposure: list[models.TargetHost]) -> bool:
     save_discovery(exposure)
 
     conn = get_connection()
-    cursor = conn.cursor()
+    if conn:
+        cursor = conn.cursor()
 
-    for host in exposure:
-        # Insert port and count if successful
-        if insert.ports(host):
-            port_count += 1
+        for host in exposure:
+            # Insert port and count if successful
+            if insert.ports(host):
+                port_count += 1
 
-        # Retrieve port db info and map port numbers to port IDs
-        cursor.execute("SELECT id, number from port WHERE ip_address = ?", (str(host.ip),))
-        port_results = {port[1]: port[0] for port in cursor.fetchall()}
+            # Retrieve port db info and map port numbers to port IDs
+            cursor.execute("SELECT id, number from port WHERE ip_address = ?", (str(host.ip),))
+            port_results = {port[1]: port[0] for port in cursor.fetchall()}
 
-        hostnames_to_update: list[tuple] = []
-        for port in host.ports:
-            total_ports += 1
-            port_id = port_results.get(port.number)
+            hostnames_to_update: list[tuple] = []
+            for port in host.ports:
+                total_ports += 1
+                port_id = port_results.get(port.number)
 
-            # Insert and count both vulns and opts if they exist and successful
-            if port.vulns and insert.vulns(port_id, port):
-                vuln_count += 1
+                # Insert and count both vulns and opts if they exist and successful
+                if port.vulns and insert.vulns(port_id, port):
+                    vuln_count += 1
 
-            if port.opts and insert.opts(port_id, port):
-                opt_count += 1
+                if port.opts and insert.opts(port_id, port):
+                    opt_count += 1
 
-            for name in port.hostnames:
-                hostnames_to_update.append(
-                    (
-                        port_id,
-                        name,
-                        str(host.ip),
+                for name in port.hostnames:
+                    hostnames_to_update.append(
+                        (
+                            port_id,
+                            name,
+                            str(host.ip),
+                        )
                     )
+
+            if hostnames_to_update:
+                execute_sql(
+                    "UPDATE hostname SET port_id = ? WHERE name = ? AND ip_address = ?",
+                    hostnames_to_update,
                 )
 
-        if hostnames_to_update:
-            execute_sql(
-                "UPDATE hostname SET port_id = ? WHERE name = ? AND ip_address = ?",
-                hostnames_to_update,
-            )
-
-    conn.close()
+        conn.close()
 
     if port_count != len(exposure):
         print(

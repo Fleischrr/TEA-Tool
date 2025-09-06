@@ -163,7 +163,7 @@ def full_scan_menu():
 
         if action == "y":
             # Save to DB input
-            save: bool = True
+            save = True
             console.print("[green]TEA-Tool[/]> [cyan]Full Scan[/]> Using existing exposure.")
             save_to_db = Prompt.ask(
                 "[green]TEA-Tool[/]> [cyan]Full Scan[/]> Save to [yellow]Database[/]?",

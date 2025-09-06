@@ -42,6 +42,7 @@ def menu_screen() -> bool:
                 case_sensitive=False,
                 show_default=True,
                 default="h",
+                show_choices=False,
             )
 
             match user_input:
