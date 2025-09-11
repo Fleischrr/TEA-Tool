@@ -71,13 +71,15 @@ def menu_screen() -> bool:
                     )
 
                     input("Press Enter to continue...")
-                    ui.view_exposure()
+                    
+                    while ui.view_exposure():
+                        continue
                     break
 
                 case "v":  # View Exposure
                     while ui.view_exposure():
                         continue
-                    break
+                    
 
                 case "f":  # Full Scan
                     use_existing, domain, country_codes, save = ui.full_scan_menu()
@@ -100,7 +102,8 @@ def menu_screen() -> bool:
                     )
 
                     input("Press Enter to continue...")
-                    ui.view_exposure()
+                    while ui.view_exposure():
+                        continue
                     break
 
                 case "q":  # Quit

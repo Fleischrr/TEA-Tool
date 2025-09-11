@@ -14,8 +14,16 @@ logger = logging.getLogger(__name__)
 
 TEA_ROOT = Path(os.getenv("TEA_ROOT", os.getcwd())) 
 
-def get_connection() -> sqlite3.Connection | None:
-    """Create a connection to the SQLite database."""
+
+def get_connection(check: bool = False) -> sqlite3.Connection | None:
+    """
+    Create a connection to the SQLite database.
+
+    :param check: Check only, does not create tables, defaults to False
+    :type check: bool, optional
+    :return: Returns the SQLite connection object or None if check is True and no tables exist.
+    :rtype: sqlite3.Connection | None
+    """
     db_path = str(get_key(dotenv_path=TEA_ROOT / ".env", key_to_get="EXPOSURE_DB_PATH"))
 
     try:
@@ -28,7 +36,13 @@ def get_connection() -> sqlite3.Connection | None:
         tables = cursor.fetchall()
 
         if not tables:
-            logger.debug("No tables found. Creating...")
+            logger.debug("No tables found.")
+
+            if check:
+                logger.debug("DB check enabled, do not create tables.")
+                return None
+
+            logger.debug("Creating database tables.")
             schema.create_all_tables(cursor)
 
             # Get number of list created

@@ -209,12 +209,18 @@ def view_exposure() -> bool:
     :return: True if the user wants to continue, False if they want to exit.
     :rtype: bool
     """
-    console.clear()
+    if db.get_connection(check=True) is None:
+        console.print("[bold red]Database not initialized, cannot view exposure.[/bold red]")
+        return False
+    
     exposure: list[models.TargetHost] = db.retrieve_exposure()
 
     if not exposure:
         console.print("[bold red]No exposure data found in the database.[/bold red]")
         return False
+    
+    # Ready terminal for output
+    console.clear()
 
     # Compact summary view
     table = Table(title="Exposure Overview", title_style="bold cyan")
