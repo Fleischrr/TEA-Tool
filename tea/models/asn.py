@@ -1,6 +1,7 @@
 """ASN dataclass for storing Autonomous System Number (ASN) information."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from ipaddress import IPv4Network
 
 
@@ -23,8 +24,8 @@ class ASN:
     name: str = ""
     subnets: list[IPv4Network] = None
     description: str = ""
-    created_at: str = ""
-    modified_at: str = ""
+    created_at: str = str(datetime.now().isoformat())
+    modified_at: str = created_at
 
     def add_subnet(self, subnet: IPv4Network):
         """

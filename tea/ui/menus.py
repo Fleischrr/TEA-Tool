@@ -62,7 +62,7 @@ def menu_screen() -> bool:
                     if not domain:
                         break
 
-                    scan.discovery(domain=domain, country_codes=country_codes, save=save)  # type: ignore
+                    exposure = scan.discovery(domain=domain, country_codes=country_codes, save=save)  # type: ignore
                     ui.schedule_scan_menu(
                         scan_type="discovery",
                         domain=domain,
@@ -71,15 +71,14 @@ def menu_screen() -> bool:
                     )
 
                     input("Press Enter to continue...")
-                    
-                    while ui.view_exposure():
+                    while ui.view_exposure() if save else ui.view_exposure(exposure):
                         continue
                     break
 
                 case "v":  # View Exposure
                     while ui.view_exposure():
                         continue
-                    
+                    break
 
                 case "f":  # Full Scan
                     use_existing, domain, country_codes, save = ui.full_scan_menu()
@@ -87,9 +86,9 @@ def menu_screen() -> bool:
 
                     # Perform scan according to user input
                     if domain:
-                        scan.full(domain=domain, country_codes=country_codes, save=save)  # type: ignore
+                        exposure = scan.full(domain=domain, country_codes=country_codes, save=save)  # type: ignore
                     elif use_existing:
-                        scan.full(use_existing=use_existing, save=save)  # type: ignore
+                        exposure = scan.full(use_existing=use_existing, save=save)  # type: ignore
                     else:
                         break
 
@@ -102,7 +101,7 @@ def menu_screen() -> bool:
                     )
 
                     input("Press Enter to continue...")
-                    while ui.view_exposure():
+                    while ui.view_exposure() if save else ui.view_exposure(exposure):
                         continue
                     break
 
