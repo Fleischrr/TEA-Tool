@@ -1,6 +1,7 @@
 """Subclass of Port object representing a vulnerability."""
 
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -21,5 +22,5 @@ class PortVuln:
     """
 
     name: str
-    created_at: str = ""
-    modified_at: str = ""
+    created_at: str = str(datetime.now().isoformat())
+    modified_at: str = created_at

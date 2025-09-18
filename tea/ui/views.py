@@ -1,5 +1,6 @@
 """Handles the exposure views of the TEA-Tool."""
 
+import logging
 from datetime import datetime, timedelta
 
 from rich.console import Console, Group
@@ -11,6 +12,7 @@ from rich.text import Text
 
 from tea import db, models
 
+logger = logging.getLogger(__name__)
 console = Console()
 SCAN_TIME_DELTA = timedelta(minutes=5)
 
@@ -198,7 +200,7 @@ def process_items(items, latest_scan, current_count, new_items_count, old_items_
     return current_count, new_items_count, old_items_count
 
 
-def view_exposure() -> bool:
+def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
     """
     Display the exposure data in a user-friendly overview format.
 
@@ -209,15 +211,21 @@ def view_exposure() -> bool:
     :return: True if the user wants to continue, False if they want to exit.
     :rtype: bool
     """
-    if db.get_connection(check=True) is None:
-        console.print("[bold red]Database not initialized, cannot view exposure.[/bold red]")
-        return False
-    
-    exposure: list[models.TargetHost] = db.retrieve_exposure()
+    if tmp_exposure is None:
+        logger.debug("Retrieving exposure data from the database.")
 
-    if not exposure:
-        console.print("[bold red]No exposure data found in the database.[/bold red]")
-        return False
+        if db.get_connection(check=True) is None:
+            console.print("[bold red]Database not initialized, cannot view exposure.[/bold red]")
+            return False
+        
+        exposure: list[models.TargetHost] = db.retrieve_exposure()
+
+        if not exposure:
+            console.print("[bold red]No exposure data found in the database.[/bold red]")
+            return False
+    else:
+        logger.debug("Using temporary exposure data.")
+        exposure = tmp_exposure
     
     # Ready terminal for output
     console.clear()
@@ -244,9 +252,8 @@ def view_exposure() -> bool:
     host_w_opts: int = 0
 
     latest_scan: datetime = max(
-        (datetime.fromisoformat(host.modified_at) for host in exposure if host.modified_at),
-        default=None,
-    )  # type: ignore
+        datetime.fromisoformat(host.modified_at) for host in exposure if host.modified_at
+    )
 
     for host in exposure:
         ip_map[str(host.ip)] = host
@@ -365,6 +372,7 @@ def view_exposure() -> bool:
             style=row_style,
         )
 
+    logger.debug("Exposure retireved and processed, printing view.")
     console.print(table)
 
     # Summary text

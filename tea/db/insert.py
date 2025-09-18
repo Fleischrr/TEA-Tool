@@ -1,5 +1,7 @@
 """Insert functions for the database."""
 
+from datetime import datetime
+
 from tea import db, models
 from tea.models.asn import ASN
 from tea.models.port import Port
@@ -16,17 +18,24 @@ def target_host(host: models.TargetHost) -> bool:
     :type host: TargetHost
     :return: True if the insert was successful, False otherwise.
     :rtype: bool
-    """
+    """        
+    # Update modified_at to current time if it exists
+    if host.modified_at:
+        host.modified_at = str(datetime.now().isoformat())
+
+    
     # Insert or update target host
     host_sql = """
-    INSERT INTO target_host(operating_system, domain, organization, asn, ip_address)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO target_host(
+        operating_system, domain, organization, asn, created_at, modified_at, ip_address
+        )
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT (ip_address) DO UPDATE SET
         operating_system = excluded.operating_system,
         domain = excluded.domain,
         organization = excluded.organization,
         asn = excluded.asn,
-        modified_at = CURRENT_TIMESTAMP
+        modified_at = excluded.modified_at
     """
 
     host_row: list[tuple] = [
@@ -35,6 +44,8 @@ def target_host(host: models.TargetHost) -> bool:
             host.domain,
             host.org,
             host.asn.number if host.asn else None,
+            host.created_at,
+            host.modified_at,
             str(host.ip),
         )
     ]
@@ -51,29 +62,43 @@ def asn(host: models.TargetHost) -> bool:
 
     :param host: The TargetHost object whose ASN to save.
     :type host: TargetHost
+    :return: True if insert was successful, False otherwise
+    :rtype: bool
     """
+    # Retrieve ASN from host, skip if none
+    if not host.asn:
+        return False
+    
+    asn = host.asn
+    
+    # Update modified_at to current time if it exists
+    if asn.modified_at:
+        asn.modified_at = str(datetime.now().isoformat())
+    
     # Insert or update ASN
     asn_sql = """
-    INSERT INTO asn(name, description, number) 
-    VALUES (?, ?, ?)
+    INSERT INTO asn(name, description, created_at, modified_at, number) 
+    VALUES (?, ?, ?, ?, ?)
     ON CONFLICT(number) DO UPDATE SET
         name = excluded.name,
         description = excluded.description,
-        modified_at = CURRENT_TIMESTAMP
+        modified_at = excluded.modified_at
     """
-
+    
     asn_row: list[tuple] = [
         (
-            host.asn.name,
-            host.asn.description,
-            str(host.asn.number),
+            asn.name,
+            asn.description,
+            asn.created_at,
+            asn.modified_at,
+            str(asn.number),
         )
     ]
 
     success = db.execute_sql(asn_sql, asn_row)
 
-    if success and host.asn.subnets:
-        return asn_subnets(host.asn)
+    if success and asn.subnets:
+        return asn_subnets(asn)
 
     return success
 
@@ -90,12 +115,17 @@ def asn_subnets(host_asn: ASN) -> bool:
     :return: True if the insert was successful, False otherwise.
     :rtype: bool
     """
+    # Update modified_at to current time if it exists
+    current_time = str(datetime.now().isoformat())
+    if host_asn.modified_at:
+        host_asn.modified_at = current_time
+
     # Insert or update ASN subnets
     subnet_sql = """
-    INSERT INTO asn_subnet(asn_number, subnet)
-    VALUES (?, ?)
+    INSERT INTO asn_subnet(asn_number, created_at, modified_at, subnet)
+    VALUES (?, ?, ?, ?)
     ON CONFLICT(asn_number, subnet) DO UPDATE SET 
-        modified_at = CURRENT_TIMESTAMP
+        modified_at = excluded.modified_at
     """
 
     subnet_rows: list[tuple] = []
@@ -103,6 +133,8 @@ def asn_subnets(host_asn: ASN) -> bool:
         subnet_rows.append(
             (
                 str(host_asn.number),
+                current_time,
+                host_asn.modified_at,
                 str(subnet),
             )
         )
@@ -124,14 +156,17 @@ def hostnames(host: models.TargetHost) -> bool:
     """
     # Skip if no hostnames on the host
     if not host.hostnames:
-        return True
+        return False
+    
+    # Current time to update timestamps
+    current_time = str(datetime.now().isoformat())
 
     # Insert or update hostnames
     hostname_sql = """
-    INSERT INTO hostname(name, ip_address)
-    VALUES (?, ?)
+    INSERT INTO hostname(name, created_at, modified_at, ip_address)
+    VALUES (?, ?, ?, ?)
     ON CONFLICT(name, ip_address) DO UPDATE SET
-        modified_at = CURRENT_TIMESTAMP
+        modified_at = excluded.modified_at
     """
 
     hostname_rows: list[tuple] = []
@@ -139,6 +174,8 @@ def hostnames(host: models.TargetHost) -> bool:
         hostname_rows.append(
             (
                 name,
+                current_time,
+                current_time,
                 str(host.ip),
             )
         )
@@ -160,22 +197,29 @@ def ports(host: models.TargetHost) -> bool:
     """
     # Skip if no ports on the host
     if not host.ports:
-        return True
+        return False
+
+    # Current time to update timestamps
+    current_time = str(datetime.now().isoformat())
 
     # Insert or update ports
     port_sql = """
-    INSERT INTO port(protocol, service, banner, http_status, number, ip_address)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO port(
+        protocol, service, banner, http_status, number, created_at, modified_at, ip_address
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT (number, ip_address) DO UPDATE SET
         protocol = excluded.protocol,
         service = excluded.service,
         banner = excluded.banner,
         http_status = excluded.http_status,
-        modified_at = CURRENT_TIMESTAMP
+        modified_at = excluded.modified_at
     """
 
     port_rows: list[tuple] = []
     for port in host.ports:
+        port.modified_at = current_time
+
         port_rows.append(
             (
                 port.protocol,
@@ -183,6 +227,8 @@ def ports(host: models.TargetHost) -> bool:
                 port.banner,
                 port.http_status,
                 port.number,
+                port.created_at,
+                port.modified_at,
                 str(host.ip),
             )
         )
@@ -206,21 +252,28 @@ def vulns(port_id: int, port: Port) -> bool:
     """
     # Skip if no vulns on the port
     if not port.vulns:
-        return True
+        return False
+
+    # Current time to update timestamps
+    current_time = str(datetime.now().isoformat())
 
     # Insert or update vulns
     vuln_sql = """
-    INSERT INTO port_vuln(name, port_id)
-    VALUES (?, ?)
+    INSERT INTO port_vuln(name, created_at, modified_at, port_id)
+    VALUES (?, ?, ?, ?)
     ON CONFLICT(name, port_id) DO UPDATE SET
-        modified_at = CURRENT_TIMESTAMP
+        modified_at = excluded.modified_at
     """
 
     vuln_rows: list[tuple] = []
     for vuln in port.vulns:
+        vuln.modified_at = current_time
+
         vuln_rows.append(
             (
                 vuln.name,
+                vuln.created_at,
+                vuln.modified_at,
                 port_id,
             )
         )
@@ -244,22 +297,29 @@ def opts(port_id: int, port: Port) -> bool:
     """
     # Skip if no opts on the port
     if not port.opts:
-        return True
+        return False
+
+    # Current time to update timestamps
+    current_time = str(datetime.now().isoformat())
 
     # Insert or update opts
     opt_sql = """
-    INSERT INTO port_opt(name, description, port_id)
-    VALUES (?, ?, ?)
+    INSERT INTO port_opt(name, description, created_at, modified_at, port_id)
+    VALUES (?, ?, ?, ?, ?)
     ON CONFLICT(name, port_id) DO UPDATE SET
-        modified_at = CURRENT_TIMESTAMP
+        modified_at = excluded.modified_at
     """
 
     opt_rows: list[tuple] = []
     for opt in port.opts:
+        opt.modified_at = current_time
+        
         opt_rows.append(
             (
                 opt.name,
                 opt.description,
+                opt.created_at,
+                opt.modified_at,
                 port_id,
             )
         )

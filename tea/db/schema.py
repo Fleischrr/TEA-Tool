@@ -17,8 +17,8 @@ def create_target_host_table(cursor: sqlite3.Cursor) -> None:
             domain TEXT,
             organization TEXT,
             asn TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            created_at TIMESTAMP NOT NULL,
+            modified_at TIMESTAMP NOT NULL,
             PRIMARY KEY (ip_address),
             FOREIGN KEY (asn) REFERENCES asn(number) ON DELETE SET NULL 
         );
@@ -37,8 +37,8 @@ def create_asn_table(cursor: sqlite3.Cursor) -> None:
             number TEXT NOT NULL,
             name TEXT,
             description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            created_at TIMESTAMP NOT NULL,
+            modified_at TIMESTAMP NOT NULL,
             PRIMARY KEY (number)
         );
     """)
@@ -56,8 +56,8 @@ def create_asn_subnet_table(cursor: sqlite3.Cursor) -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             asn_number TEXT NOT NULL,
             subnet TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP,
+            modified_at TIMESTAMP,
             UNIQUE (asn_number, subnet),
             FOREIGN KEY (asn_number) REFERENCES asn(number) ON DELETE CASCADE ON UPDATE CASCADE
         );
@@ -77,8 +77,8 @@ def create_hostname_table(cursor: sqlite3.Cursor) -> None:
             name TEXT NOT NULL,
             ip_address TEXT NOT NULL,
             port_id INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP,
+            modified_at TIMESTAMP,
             UNIQUE (name, ip_address),
             FOREIGN KEY (ip_address) REFERENCES target_host(ip_address) ON DELETE CASCADE,
             FOREIGN KEY (port_id) REFERENCES port(id) ON DELETE CASCADE
@@ -102,8 +102,8 @@ def create_port_table(cursor: sqlite3.Cursor) -> None:
             service TEXT,
             banner TEXT,
             http_status INTEGER CHECK (http_status BETWEEN 100 AND 599),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            created_at TIMESTAMP NOT NULL,
+            modified_at TIMESTAMP NOT NULL,
             UNIQUE (number, ip_address),
             FOREIGN KEY (ip_address) REFERENCES target_host(ip_address) ON DELETE CASCADE
         );
@@ -122,8 +122,8 @@ def create_port_vuln_table(cursor: sqlite3.Cursor) -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             port_id INTEGER NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP,
+            modified_at TIMESTAMP,
             UNIQUE (name, port_id),
             FOREIGN KEY (port_id) REFERENCES port(id) ON DELETE CASCADE
         );
@@ -143,8 +143,8 @@ def create_port_opt_table(cursor: sqlite3.Cursor) -> None:
             name TEXT NOT NULL,
             description TEXT,
             port_id INTEGER NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP,
+            modified_at TIMESTAMP,
             UNIQUE (name, port_id),
             FOREIGN KEY (port_id) REFERENCES port(id) ON DELETE CASCADE
         );
