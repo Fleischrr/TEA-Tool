@@ -187,16 +187,31 @@ def process_items(items, latest_scan, current_count, new_items_count, old_items_
         created = datetime.fromisoformat(item.created_at)
         modified = datetime.fromisoformat(item.modified_at)
 
+        logger.debug(
+            f"B22-- cTime: {created} - mTime: {modified}"
+        )
+
         if abs(latest_scan - modified) <= SCAN_TIME_DELTA:
+            logger.debug(
+                f"scan delta: {abs(latest_scan - modified)}, DELTA: {SCAN_TIME_DELTA}"
+            )
             current_count += 1
             item_map[item.name] = item_map.get(item.name, 0) + 1
 
-            if created == modified:
+            logger.debug(
+                f"B22-- Item: {item_map}\n"
+                f"modify delta: {abs(modified - created)}, DELTA: {timedelta(minutes=1)}"
+            )
+            
+            if abs(modified - created) <= timedelta(1):
                 new_items_count += 1
 
             else:
                 old_items_count += 1
 
+    logger.debug(
+        f"Returning: cc{current_count}, nc{new_items_count}, oc{old_items_count}"
+    )
     return current_count, new_items_count, old_items_count
 
 
@@ -212,7 +227,7 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
     :rtype: bool
     """
     if tmp_exposure is None:
-        logger.debug("Retrieving exposure data from the database.")
+        logger.info("Viewing exposure data retrieved from the database.")
 
         if db.get_connection(check=True) is None:
             console.print("[bold red]Database not initialized, cannot view exposure.[/bold red]")
@@ -224,7 +239,7 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
             console.print("[bold red]No exposure data found in the database.[/bold red]")
             return False
     else:
-        logger.debug("Using temporary exposure data.")
+        logger.info("Viewing temporary exposure data.")
         exposure = tmp_exposure
     
     # Ready terminal for output
@@ -283,12 +298,16 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
         for port in host.ports:
             port_created = datetime.fromisoformat(port.created_at)
             port_modified = datetime.fromisoformat(port.modified_at)
-
+            logger.debug(
+                f"B22-- Port c: {port_created}, m: {port_modified}"
+                f"B22-- Port differance: {abs(latest_scan - port_modified)} - DELTA: {SCAN_TIME_DELTA}"
+            )
+            
             # If port is current
             if abs(latest_scan - port_modified) <= SCAN_TIME_DELTA:
                 current_ports += 1
 
-                if port_created == port_modified:
+                if abs(port_modified - port_created) <= timedelta(1):
                     new_ports_count += 1
 
                 # Map ports
@@ -301,6 +320,10 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
             else:
                 # If port is old
                 old_ports_count += 1
+
+            logger.debug(
+                f"B22-- PORTS cc: {current_ports} - nc: {new_ports_count} - oc: {old_ports_count}"
+            )
 
             vulns_count, new_opt_vuln_count, old_opt_vuln_count = process_items(
                 port.vulns,
@@ -319,6 +342,19 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
                 old_opt_vuln_count,
                 vuln_opt_map,
             )
+
+            logger.debug(
+                f"B22-- VULN/OPT Current: {vulns_count+opts_count} - New: {new_opt_vuln_count} - Old: {old_opt_vuln_count}"
+            )
+
+        
+        logger.debug(
+            f"B22-- END PORTS Current: {current_ports} - New: {new_ports_count} - Old: {old_ports_count}"
+        )
+        
+        logger.debug(
+            f"B22-- END VULN/OPT Current: {vulns_count+opts_count} - New: {new_opt_vuln_count} - Old: {old_opt_vuln_count}"
+        )
 
         # Set style based on criticality
         if vulns_count > 0:
