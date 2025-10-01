@@ -188,29 +188,31 @@ def process_items(items, latest_scan, current_count, new_items_count, old_items_
         modified = datetime.fromisoformat(item.modified_at)
 
         logger.debug(
-            f"B22-- cTime: {created} - mTime: {modified}"
+            f"-OPT/VULN cT: {created} - mT: {modified}"
         )
 
         if abs(latest_scan - modified) <= SCAN_TIME_DELTA:
             logger.debug(
-                f"scan delta: {abs(latest_scan - modified)}, DELTA: {SCAN_TIME_DELTA}"
+                f"-OPT/VULN scan delta: {abs(latest_scan - modified)}, DELTA: {SCAN_TIME_DELTA}"
             )
-            current_count += 1
-            item_map[item.name] = item_map.get(item.name, 0) + 1
 
             logger.debug(
-                f"B22-- Item: {item_map}\n"
-                f"modify delta: {abs(modified - created)}, DELTA: {timedelta(minutes=1)}"
+                f"-OPT/VULN modify delta: {abs(modified - created)}, DELTA: {timedelta(minutes=1)}"
             )
             
-            if abs(modified - created) <= timedelta(1):
+            if abs(modified - created) <= timedelta(minutes=1):
                 new_items_count += 1
-
             else:
-                old_items_count += 1
+                current_count += 1
+
+            item_map[item.name] = item_map.get(item.name, 0) + 1
+
+        else:
+            old_items_count += 1
+
 
     logger.debug(
-        f"Returning: cc{current_count}, nc{new_items_count}, oc{old_items_count}"
+        f"-OPT/VULN Returning: cC: {current_count}, nC: {new_items_count}, oC: {old_items_count}"
     )
     return current_count, new_items_count, old_items_count
 
@@ -298,17 +300,28 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
         for port in host.ports:
             port_created = datetime.fromisoformat(port.created_at)
             port_modified = datetime.fromisoformat(port.modified_at)
+
             logger.debug(
-                f"B22-- Port c: {port_created}, m: {port_modified}"
-                f"B22-- Port differance: {abs(latest_scan - port_modified)} - DELTA: {SCAN_TIME_DELTA}"
+                f"PORTS scan delta: {abs(latest_scan - port_modified)} - DELTA: {SCAN_TIME_DELTA}"
+            )
+            logger.debug(
+                f"PORTS scan lS: {latest_scan} - pM: {port_modified}"
             )
             
             # If port is current
             if abs(latest_scan - port_modified) <= SCAN_TIME_DELTA:
-                current_ports += 1
 
                 if abs(port_modified - port_created) <= timedelta(1):
                     new_ports_count += 1
+                else: 
+                    current_ports += 1
+                
+                logger.debug(
+                    f"PORTS delta: {abs(port_modified - port_created)}"
+                )
+                logger.debug(
+                    f"PORTS mT: {port_modified} - cT: {port_created} - DELTA: {timedelta(minutes=1)}"
+                )
 
                 # Map ports
                 port_count[port.number] = port_count.get(port.number, 0) + 1
@@ -321,8 +334,9 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
                 # If port is old
                 old_ports_count += 1
 
+
             logger.debug(
-                f"B22-- PORTS cc: {current_ports} - nc: {new_ports_count} - oc: {old_ports_count}"
+                f"--PORTS nC: {new_ports_count} - oC: {old_ports_count} - total: {current_ports}"
             )
 
             vulns_count, new_opt_vuln_count, old_opt_vuln_count = process_items(
@@ -344,16 +358,16 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
             )
 
             logger.debug(
-                f"B22-- VULN/OPT Current: {vulns_count+opts_count} - New: {new_opt_vuln_count} - Old: {old_opt_vuln_count}"
+                f"-- VULN/OPT New: {new_opt_vuln_count} - Old: {old_opt_vuln_count} - total: {vulns_count+opts_count}"
             )
 
         
         logger.debug(
-            f"B22-- END PORTS Current: {current_ports} - New: {new_ports_count} - Old: {old_ports_count}"
+            f"- PORTS New: {new_ports_count} - Old: {old_ports_count} - total: {current_ports}"
         )
         
         logger.debug(
-            f"B22-- END VULN/OPT Current: {vulns_count+opts_count} - New: {new_opt_vuln_count} - Old: {old_opt_vuln_count}"
+            f"- VULN/OPT Current: {vulns_count+opts_count} - New: {new_opt_vuln_count} - Old: {old_opt_vuln_count}"
         )
 
         # Set style based on criticality
@@ -376,14 +390,17 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
 
         # Generate port trend text
         port_text = ""
-        if new_ports_count > 0:
-            port_text += f"[green]↑{new_ports_count}[/]"
-
-        if old_ports_count > 0:
-            port_text += f"[red]↓{old_ports_count}[/]"
-
         if new_ports_count == 0 and old_ports_count == 0:
             port_text += "[dim]0[/]"
+        
+        else:
+            if new_ports_count > 0 or old_ports_count > 0:
+                port_text += f"[green]↑{new_ports_count}[/][red]↓{old_ports_count}[/]"
+
+            #if old_ports_count > 0:
+            #    port_text += f"[red]↓{old_ports_count}[/]"
+
+        logger.debug(f"PORT TEXT: {port_text}")
 
         # Generate vuln/opt trend text
         vuln_opt_text = ""
