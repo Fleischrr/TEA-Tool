@@ -181,39 +181,22 @@ def process_items(items, latest_scan, current_count, new_items_count, old_items_
     :param old_items_count: The old items count.
     :param item_map: Map of items to targets.
     :return: The updated counts.
-
     """
     for item in items:
         created = datetime.fromisoformat(item.created_at)
         modified = datetime.fromisoformat(item.modified_at)
 
-        logger.debug(
-            f"-OPT/VULN cT: {created} - mT: {modified}"
-        )
-
         if abs(latest_scan - modified) <= SCAN_TIME_DELTA:
-            logger.debug(
-                f"-OPT/VULN scan delta: {abs(latest_scan - modified)}, DELTA: {SCAN_TIME_DELTA}"
-            )
-
-            logger.debug(
-                f"-OPT/VULN modify delta: {abs(modified - created)}, DELTA: {timedelta(minutes=1)}"
-            )
+            current_count += 1
             
             if abs(modified - created) <= timedelta(minutes=1):
                 new_items_count += 1
-            else:
-                current_count += 1
 
             item_map[item.name] = item_map.get(item.name, 0) + 1
 
         else:
             old_items_count += 1
 
-
-    logger.debug(
-        f"-OPT/VULN Returning: cC: {current_count}, nC: {new_items_count}, oC: {old_items_count}"
-    )
     return current_count, new_items_count, old_items_count
 
 
@@ -271,6 +254,7 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
     latest_scan: datetime = max(
         datetime.fromisoformat(host.modified_at) for host in exposure if host.modified_at
     )
+    logger.info(f"Latest scan time: {latest_scan}")
 
     for host in exposure:
         ip_map[str(host.ip)] = host
@@ -294,35 +278,21 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
         # Vuln and opt counts
         vulns_count: int = 0
         opts_count: int = 0
-        new_opt_vuln_count: int = 0
-        old_opt_vuln_count: int = 0
+        new_notes_count: int = 0
+        old_notes_count: int = 0
 
         for port in host.ports:
             port_created = datetime.fromisoformat(port.created_at)
             port_modified = datetime.fromisoformat(port.modified_at)
-
-            logger.debug(
-                f"PORTS scan delta: {abs(latest_scan - port_modified)} - DELTA: {SCAN_TIME_DELTA}"
-            )
-            logger.debug(
-                f"PORTS scan lS: {latest_scan} - pM: {port_modified}"
-            )
             
             # If port is current
             if abs(latest_scan - port_modified) <= SCAN_TIME_DELTA:
+                current_ports += 1
 
-                if abs(port_modified - port_created) <= timedelta(1):
-                    new_ports_count += 1
-                else: 
-                    current_ports += 1
+                # If port is newly discovered
+                if abs(port_modified - port_created) <= timedelta(minutes=1):
+                    new_ports_count += 1 
                 
-                logger.debug(
-                    f"PORTS delta: {abs(port_modified - port_created)}"
-                )
-                logger.debug(
-                    f"PORTS mT: {port_modified} - cT: {port_created} - DELTA: {timedelta(minutes=1)}"
-                )
-
                 # Map ports
                 port_count[port.number] = port_count.get(port.number, 0) + 1
 
@@ -334,41 +304,24 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
                 # If port is old
                 old_ports_count += 1
 
-
-            logger.debug(
-                f"--PORTS nC: {new_ports_count} - oC: {old_ports_count} - total: {current_ports}"
-            )
-
-            vulns_count, new_opt_vuln_count, old_opt_vuln_count = process_items(
+            # Process and count vulns and opts into notes
+            vulns_count, new_notes_count, old_notes_count = process_items(
                 port.vulns,
                 latest_scan,
                 vulns_count,
-                new_opt_vuln_count,
-                old_opt_vuln_count,
+                new_notes_count,
+                old_notes_count,
                 vuln_opt_map,
             )
 
-            opts_count, new_opt_vuln_count, old_opt_vuln_count = process_items(
+            opts_count, new_notes_count, old_notes_count = process_items(
                 port.opts,
                 latest_scan,
                 opts_count,
-                new_opt_vuln_count,
-                old_opt_vuln_count,
+                new_notes_count,
+                old_notes_count,
                 vuln_opt_map,
             )
-
-            logger.debug(
-                f"-- VULN/OPT New: {new_opt_vuln_count} - Old: {old_opt_vuln_count} - total: {vulns_count+opts_count}"
-            )
-
-        
-        logger.debug(
-            f"- PORTS New: {new_ports_count} - Old: {old_ports_count} - total: {current_ports}"
-        )
-        
-        logger.debug(
-            f"- VULN/OPT Current: {vulns_count+opts_count} - New: {new_opt_vuln_count} - Old: {old_opt_vuln_count}"
-        )
 
         # Set style based on criticality
         if vulns_count > 0:
@@ -390,28 +343,17 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
 
         # Generate port trend text
         port_text = ""
-        if new_ports_count == 0 and old_ports_count == 0:
-            port_text += "[dim]0[/]"
-        
+        if new_ports_count > 0 or old_ports_count > 0:
+            port_text += f"[green]↑{new_ports_count}[/][red]↓{old_ports_count}[/]"
         else:
-            if new_ports_count > 0 or old_ports_count > 0:
-                port_text += f"[green]↑{new_ports_count}[/][red]↓{old_ports_count}[/]"
-
-            #if old_ports_count > 0:
-            #    port_text += f"[red]↓{old_ports_count}[/]"
-
-        logger.debug(f"PORT TEXT: {port_text}")
-
+            port_text += "[dim]0[/]"
+    
         # Generate vuln/opt trend text
-        vuln_opt_text = ""
-        if new_opt_vuln_count > 0:
-            vuln_opt_text += f"[green]↑{new_opt_vuln_count}[/]"
-
-        if old_opt_vuln_count > 0:
-            vuln_opt_text += f"[red]↓{old_opt_vuln_count}[/]"
-
-        if new_opt_vuln_count == 0 and old_opt_vuln_count == 0:
-            vuln_opt_text += "[dim]0[/]"
+        notes_text = ""
+        if new_notes_count > 0 or old_notes_count > 0:
+            notes_text += f"[green]↑{new_notes_count}[/][red]↓{old_notes_count}[/]"
+        else:
+            notes_text += "[dim]0[/]"
 
         # Set the row order
         table.add_row(
@@ -421,11 +363,11 @@ def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
             host.domain or "-",
             host.org or "-",
             host.asn.number if host.asn else "N/A",
-            str(vulns_count + opts_count) + f" ({vuln_opt_text})",
+            str(vulns_count + opts_count) + f" ({notes_text})",
             style=row_style,
         )
 
-    logger.debug("Exposure retireved and processed, printing view.")
+    logger.info("Exposure retireved and processed, printing view.")
     console.print(table)
 
     # Summary text

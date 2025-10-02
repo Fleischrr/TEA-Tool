@@ -11,7 +11,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.text import Text
 
-from tea import utils
+from tea import db, utils
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -154,12 +154,14 @@ def full_scan_menu():
         if ready == "n":
             return None, None, None, None
 
-        action = Prompt.ask(
-            "[green]TEA-Tool[/]> [cyan]Full Scan[/]> Use existing exposure?",
-            default="n",
-            choices=["y", "n"],
-            case_sensitive=False,
-        )
+        action = "n"
+        if db.retrieve_exposure():   
+            action = Prompt.ask(
+                "[green]TEA-Tool[/]> [cyan]Full Scan[/]> Use existing exposure?",
+                default="n",
+                choices=["y", "n"],
+                case_sensitive=False,
+            )
 
         if action == "y":
             # Save to DB input
