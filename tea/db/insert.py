@@ -19,11 +19,6 @@ def target_host(host: models.TargetHost) -> bool:
     :return: True if the insert was successful, False otherwise.
     :rtype: bool
     """        
-    # Update modified_at to current time if it exists
-    if host.modified_at:
-        host.modified_at = str(datetime.now().isoformat())
-
-    
     # Insert or update target host
     host_sql = """
     INSERT INTO target_host(
@@ -71,10 +66,6 @@ def asn(host: models.TargetHost) -> bool:
     
     asn = host.asn
     
-    # Update modified_at to current time if it exists
-    if asn.modified_at:
-        asn.modified_at = str(datetime.now().isoformat())
-    
     # Insert or update ASN
     asn_sql = """
     INSERT INTO asn(name, description, created_at, modified_at, number) 
@@ -115,11 +106,6 @@ def asn_subnets(host_asn: ASN) -> bool:
     :return: True if the insert was successful, False otherwise.
     :rtype: bool
     """
-    # Update modified_at to current time if it exists
-    current_time = str(datetime.now().isoformat())
-    if host_asn.modified_at:
-        host_asn.modified_at = current_time
-
     # Insert or update ASN subnets
     subnet_sql = """
     INSERT INTO asn_subnet(asn_number, created_at, modified_at, subnet)
@@ -133,7 +119,7 @@ def asn_subnets(host_asn: ASN) -> bool:
         subnet_rows.append(
             (
                 str(host_asn.number),
-                current_time,
+                host_asn.created_at,
                 host_asn.modified_at,
                 str(subnet),
             )
@@ -157,9 +143,6 @@ def hostnames(host: models.TargetHost) -> bool:
     # Skip if no hostnames on the host
     if not host.hostnames:
         return False
-    
-    # Current time to update timestamps
-    current_time = str(datetime.now().isoformat())
 
     # Insert or update hostnames
     hostname_sql = """
@@ -174,8 +157,8 @@ def hostnames(host: models.TargetHost) -> bool:
         hostname_rows.append(
             (
                 name,
-                current_time,
-                current_time,
+                host.created_at,
+                host.modified_at,
                 str(host.ip),
             )
         )
@@ -199,9 +182,6 @@ def ports(host: models.TargetHost) -> bool:
     if not host.ports:
         return False
 
-    # Current time to update timestamps
-    current_time = str(datetime.now().isoformat())
-
     # Insert or update ports
     port_sql = """
     INSERT INTO port(
@@ -218,7 +198,6 @@ def ports(host: models.TargetHost) -> bool:
 
     port_rows: list[tuple] = []
     for port in host.ports:
-        port.modified_at = current_time
 
         port_rows.append(
             (
@@ -254,9 +233,6 @@ def vulns(port_id: int, port: Port) -> bool:
     if not port.vulns:
         return False
 
-    # Current time to update timestamps
-    current_time = str(datetime.now().isoformat())
-
     # Insert or update vulns
     vuln_sql = """
     INSERT INTO port_vuln(name, created_at, modified_at, port_id)
@@ -267,8 +243,7 @@ def vulns(port_id: int, port: Port) -> bool:
 
     vuln_rows: list[tuple] = []
     for vuln in port.vulns:
-        vuln.modified_at = current_time
-
+        
         vuln_rows.append(
             (
                 vuln.name,
@@ -299,9 +274,6 @@ def opts(port_id: int, port: Port) -> bool:
     if not port.opts:
         return False
 
-    # Current time to update timestamps
-    current_time = str(datetime.now().isoformat())
-
     # Insert or update opts
     opt_sql = """
     INSERT INTO port_opt(name, description, created_at, modified_at, port_id)
@@ -312,7 +284,6 @@ def opts(port_id: int, port: Port) -> bool:
 
     opt_rows: list[tuple] = []
     for opt in port.opts:
-        opt.modified_at = current_time
         
         opt_rows.append(
             (
