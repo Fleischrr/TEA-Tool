@@ -56,7 +56,7 @@ def gen_splash_panel() -> Panel:
     welcome.append("\nhttps://github.com/Fleischrr/TEA-Tool\n", style="dim")
     welcome.append("Author: ", style="white")
     welcome.append("Fleischrr\n", style="bold white")
-    welcome.append("Version: 1.3.0\n", style="dim")
+    welcome.append("Version: 1.3.0\n", style="dim white")
     welcome.append("\n\"You can't protect what you don't know about.\"", style="dim italic")
 
     return Panel(welcome)
