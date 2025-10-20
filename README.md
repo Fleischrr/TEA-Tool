@@ -99,7 +99,7 @@ Install `requirements.txt` when Virtualenv is active:
 pip3 install -r requirements.txt
 ```
 
-_Next, see [Standard Use](#Standard%20Use)_
+_Next, see [Standard Use](#Standard-Use)_
 
 #### Docker Install
 Here is an example to use docker container as an installation method.
@@ -112,7 +112,7 @@ docker compose build
 docker compose up -d
 ```
 
-_Next, see [Docker Use](#Docker%20Use)_
+_Next, see [Docker Use](#Docker-Use)_
 
 
 ## Usage
