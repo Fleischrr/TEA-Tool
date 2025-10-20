@@ -62,8 +62,8 @@ TEA-Tool does also work very well for offensive purposes:
       - [Get your API key here](https://account.shodan.io/) (the free API key does not have sufficient access)
 
 - (optional) A `.env` file within the root directory of the TEA-Tool repository.
-  - Not directly required, but this file applies the API key persistently for the tool.
-  - This file is used to store your SHODAN API key and other configuration settings, see [Configuration](#Configuration) for more details.
+  - Not directly required.
+  - This file is used to store your SHODAN API key and other configuration settings persistently, see [Configuration](#Configuration) for more details.
 
 
 
@@ -99,8 +99,9 @@ Install `requirements.txt` when Virtualenv is active:
 pip3 install -r requirements.txt
 ```
 
+_Next, see [Standard Use](#Standard%20Use)_
 
-### Docker Install
+#### Docker Install
 Here is an example to use docker container as an installation method.
 After cloning the repository, within the cloned repo, run these docker commands to build the TEA-Tool.
 
@@ -110,6 +111,8 @@ docker compose build
 
 docker compose up -d
 ```
+
+_Next, see [Docker Use](#Docker%20Use)_
 
 
 ## Usage
@@ -127,10 +130,13 @@ This will display the TEA-Tool's main menu *User Interface* (UI) with instructio
 More explanation of the tool's UI usage is available within the main menu,
 or in the documentation under the docs folder.
 
+#### Standard Use
 Launch the tool with:
 ```sh
 python tea_tool.py
 ```
+
+#### Docker Use
 Or if installed with Docker, run this command to enter into the TEA-Tool main menu within the container (`CTRL+d` to exit container):
 ```sh
 docker compose exec tea-tool bash
@@ -184,9 +190,11 @@ LOG_PATH=/custom/path/to/    # Optional
 ```
 
 **Explanation**
-- `SHODAN_API_KEY`: Your SHODAN API key. This is optional but recommended to get all of the tool's details. ([Get your API key here](https://account.shodan.io/))
-- `EXPOSURE_DB_PATH`: Optional path for the SQLite database file. If not specified, the default path is used.
+- `TEA_ROOT`: The absolute path for the TEA-Tool's root directory.
 - `LOG_PATH`: Optional path for the log file. If not specified, the default path is used.
+- `EXPOSURE_DB_PATH`: Optional path for the SQLite database file. If not specified, the default path is used. Filename has to end with `.sqlite`.
+- `SCHEDULE_PATH`: Path to the schedule JSON configuration file. Filename has to end with `.json`.
+- `SHODAN_API_KEY`: Your SHODAN API key. This is optional but recommended to get all of the tool's details ([Get your API key here](https://account.shodan.io/)).
 
 > A paid SHODAN account is *recommended* for full detail, but is **not required** for the tool to function.
 
