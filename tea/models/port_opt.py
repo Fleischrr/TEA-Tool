@@ -1,6 +1,7 @@
 """Subclass of Port object representing optional data."""
 
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -26,8 +27,8 @@ class PortOptional:
 
     name: str
     description: str = ""
-    created_at: str = ""
-    modified_at: str = ""
+    created_at: str = str(datetime.now().isoformat())
+    modified_at: str = created_at
 
     def __str__(self):
         """Return a string representation of the PortOptional object."""

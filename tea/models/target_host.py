@@ -1,6 +1,7 @@
 """TargetHost dataclass for storing target host information."""
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from ipaddress import IPv4Address
 
 from .asn import ASN
@@ -46,8 +47,8 @@ class TargetHost:
     domain: str = ""
     org: str = ""
     asn: ASN | None = None
-    created_at: str = ""
-    modified_at: str = ""
+    created_at: str = str(datetime.now().isoformat())
+    modified_at: str = created_at
 
     def __post_init__(self) -> None:
         """Sorts the list of ports in ascending order after initialization."""

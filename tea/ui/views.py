@@ -1,5 +1,6 @@
 """Handles the exposure views of the TEA-Tool."""
 
+import logging
 from datetime import datetime, timedelta
 
 from rich.console import Console, Group
@@ -11,6 +12,7 @@ from rich.text import Text
 
 from tea import db, models
 
+logger = logging.getLogger(__name__)
 console = Console()
 SCAN_TIME_DELTA = timedelta(minutes=5)
 
@@ -179,7 +181,6 @@ def process_items(items, latest_scan, current_count, new_items_count, old_items_
     :param old_items_count: The old items count.
     :param item_map: Map of items to targets.
     :return: The updated counts.
-
     """
     for item in items:
         created = datetime.fromisoformat(item.created_at)
@@ -187,18 +188,19 @@ def process_items(items, latest_scan, current_count, new_items_count, old_items_
 
         if abs(latest_scan - modified) <= SCAN_TIME_DELTA:
             current_count += 1
-            item_map[item.name] = item_map.get(item.name, 0) + 1
-
-            if created == modified:
+            
+            if abs(modified - created) <= timedelta(minutes=1):
                 new_items_count += 1
 
-            else:
-                old_items_count += 1
+            item_map[item.name] = item_map.get(item.name, 0) + 1
+
+        else:
+            old_items_count += 1
 
     return current_count, new_items_count, old_items_count
 
 
-def view_exposure() -> bool:
+def view_exposure(tmp_exposure: list[models.TargetHost] | None = None) -> bool:
     """
     Display the exposure data in a user-friendly overview format.
 
@@ -209,24 +211,34 @@ def view_exposure() -> bool:
     :return: True if the user wants to continue, False if they want to exit.
     :rtype: bool
     """
-    console.clear()
-    exposure: list[models.TargetHost] = db.retrieve_exposure()
+    if tmp_exposure is None:
+        logger.info("Viewing exposure data retrieved from the database.")
 
-    if not exposure:
-        console.print("[bold red]No exposure data found in the database.[/bold red]")
-        return False
+        if db.get_connection(check=True) is None:
+            console.print("[bold red]Database not initialized, cannot view exposure.[/bold red]")
+            return False
+        
+        exposure: list[models.TargetHost] = db.retrieve_exposure()
+
+        if not exposure:
+            console.print("[bold red]No exposure data found in the database.[/bold red]")
+            return False
+    else:
+        logger.info("Viewing temporary exposure data.")
+        exposure = tmp_exposure
+    
+    # Ready terminal for output
+    console.clear()
 
     # Compact summary view
     table = Table(title="Exposure Overview", title_style="bold cyan")
     table.add_column("IP Address", style="bold white")
     table.add_column("Hostnames", justify="right")
-    table.add_column("Ports", justify="right")
-    table.add_column("Trend", justify="center")
+    table.add_column("Ports [dim]([green]+[/]/[red]-[/])[/]", justify="center")
     table.add_column("Domain", style="dim")
     table.add_column("Organization", style="dim")
     table.add_column("ASN", style="cyan")
-    table.add_column("Opts/vulns", style="yellow", justify="right")
-    table.add_column("Trend", justify="center")
+    table.add_column("Notes [dim]([green]+[/]/[red]-[/])[/]", style="yellow", justify="center")
 
     # Different maps and counters for statistics
     ip_map = {}  # IP -> TargetHost
@@ -240,9 +252,9 @@ def view_exposure() -> bool:
     host_w_opts: int = 0
 
     latest_scan: datetime = max(
-        (datetime.fromisoformat(host.modified_at) for host in exposure if host.modified_at),
-        default=None,
-    )  # type: ignore
+        datetime.fromisoformat(host.modified_at) for host in exposure if host.modified_at
+    )
+    logger.info(f"Latest scan time: {latest_scan}")
 
     for host in exposure:
         ip_map[str(host.ip)] = host
@@ -266,20 +278,21 @@ def view_exposure() -> bool:
         # Vuln and opt counts
         vulns_count: int = 0
         opts_count: int = 0
-        new_opt_vuln_count: int = 0
-        old_opt_vuln_count: int = 0
+        new_notes_count: int = 0
+        old_notes_count: int = 0
 
         for port in host.ports:
             port_created = datetime.fromisoformat(port.created_at)
             port_modified = datetime.fromisoformat(port.modified_at)
-
+            
             # If port is current
             if abs(latest_scan - port_modified) <= SCAN_TIME_DELTA:
                 current_ports += 1
 
-                if port_created == port_modified:
-                    new_ports_count += 1
-
+                # If port is newly discovered
+                if abs(port_modified - port_created) <= timedelta(minutes=1):
+                    new_ports_count += 1 
+                
                 # Map ports
                 port_count[port.number] = port_count.get(port.number, 0) + 1
 
@@ -291,21 +304,22 @@ def view_exposure() -> bool:
                 # If port is old
                 old_ports_count += 1
 
-            vulns_count, new_opt_vuln_count, old_opt_vuln_count = process_items(
+            # Process and count vulns and opts into notes
+            vulns_count, new_notes_count, old_notes_count = process_items(
                 port.vulns,
                 latest_scan,
                 vulns_count,
-                new_opt_vuln_count,
-                old_opt_vuln_count,
+                new_notes_count,
+                old_notes_count,
                 vuln_opt_map,
             )
 
-            opts_count, new_opt_vuln_count, old_opt_vuln_count = process_items(
+            opts_count, new_notes_count, old_notes_count = process_items(
                 port.opts,
                 latest_scan,
                 opts_count,
-                new_opt_vuln_count,
-                old_opt_vuln_count,
+                new_notes_count,
+                old_notes_count,
                 vuln_opt_map,
             )
 
@@ -329,40 +343,31 @@ def view_exposure() -> bool:
 
         # Generate port trend text
         port_text = ""
-        if new_ports_count > 0:
-            port_text += f"[green]↑{new_ports_count}[/]"
-
-        if old_ports_count > 0:
-            port_text += f"[red]↓{old_ports_count}[/]"
-
-        if new_ports_count == 0 and old_ports_count == 0:
-            port_text += "-"
-
+        if new_ports_count > 0 or old_ports_count > 0:
+            port_text += f"[green]↑{new_ports_count}[/][red]↓{old_ports_count}[/]"
+        else:
+            port_text += "[dim]0[/]"
+    
         # Generate vuln/opt trend text
-        vuln_opt_text = ""
-        if new_opt_vuln_count > 0:
-            vuln_opt_text += f"[green]↑{new_opt_vuln_count}[/]"
-
-        if old_opt_vuln_count > 0:
-            vuln_opt_text += f"[red]↓{old_opt_vuln_count}[/]"
-
-        if new_opt_vuln_count == 0 and old_opt_vuln_count == 0:
-            vuln_opt_text += "-"
+        notes_text = ""
+        if new_notes_count > 0 or old_notes_count > 0:
+            notes_text += f"[green]↑{new_notes_count}[/][red]↓{old_notes_count}[/]"
+        else:
+            notes_text += "[dim]0[/]"
 
         # Set the row order
         table.add_row(
             ip_text,
             str(len(host.hostnames)),
-            str(len(host.ports)),
-            port_text,
+            str(len(host.ports)) + f" ({port_text})",
             host.domain or "-",
             host.org or "-",
             host.asn.number if host.asn else "N/A",
-            str(vulns_count + opts_count),
-            vuln_opt_text,
+            str(vulns_count + opts_count) + f" ({notes_text})",
             style=row_style,
         )
 
+    logger.info("Exposure retireved and processed, printing view.")
     console.print(table)
 
     # Summary text

@@ -3,16 +3,28 @@
 import logging
 import os
 import sqlite3
+from pathlib import Path
+
+from dotenv import get_key
 
 from tea import models
 from tea.db import insert, schema
 
 logger = logging.getLogger(__name__)
 
+TEA_ROOT = Path(os.getenv("TEA_ROOT", os.getcwd())) 
 
-def get_connection() -> sqlite3.Connection | None:
-    """Create a connection to the SQLite database."""
-    db_path: str = os.getenv("EXPOSURE_DB_PATH")
+
+def get_connection(check: bool = False) -> sqlite3.Connection | None:
+    """
+    Create a connection to the SQLite database.
+
+    :param check: Check only, does not create tables, defaults to False
+    :type check: bool, optional
+    :return: Returns the SQLite connection object or None if check is True and no tables exist.
+    :rtype: sqlite3.Connection | None
+    """
+    db_path = str(get_key(dotenv_path=TEA_ROOT / ".env", key_to_get="EXPOSURE_DB_PATH"))
 
     try:
         conn = sqlite3.connect(db_path)
@@ -24,7 +36,13 @@ def get_connection() -> sqlite3.Connection | None:
         tables = cursor.fetchall()
 
         if not tables:
-            logger.debug("No tables found. Creating...")
+            logger.debug("No tables found.")
+
+            if check:
+                logger.debug("DB check enabled, do not create tables.")
+                return None
+
+            logger.debug("Creating database tables.")
             schema.create_all_tables(cursor)
 
             # Get number of list created
@@ -55,24 +73,27 @@ def execute_sql(sql: str, rows: list[tuple]) -> bool:
     if len(rows) == 1:
         row = rows[0]
 
-    try:
-        cursor = conn.cursor()
+    if conn:
+        try:
+            cursor = conn.cursor()
 
-        if row is not None:
-            cursor.execute(sql, row)
-            conn.commit()
-            return cursor.rowcount == 1
-        else:
-            cursor.executemany(sql, rows)
-            conn.commit()
-            return cursor.rowcount == len(rows)
+            if row is not None:
+                cursor.execute(sql, row)
+                conn.commit()
+                return cursor.rowcount == 1
+            else:
+                cursor.executemany(sql, rows)
+                conn.commit()
+                return cursor.rowcount == len(rows)
 
-    except sqlite3.IntegrityError as e:
-        logger.error(f"Database insert failed: {e}")
-        return False
+        except sqlite3.IntegrityError as e:
+            logger.error(f"Database insert failed: {e}")
+            return False
 
-    finally:
-        conn.close()
+        finally:
+            conn.close()
+    
+    return True
 
 
 def save_discovery(exposure: list[models.TargetHost]) -> bool:
@@ -141,45 +162,46 @@ def save_full(exposure: list[models.TargetHost]) -> bool:
     save_discovery(exposure)
 
     conn = get_connection()
-    cursor = conn.cursor()
+    if conn:
+        cursor = conn.cursor()
 
-    for host in exposure:
-        # Insert port and count if successful
-        if insert.ports(host):
-            port_count += 1
+        for host in exposure:
+            # Insert port and count if successful
+            if insert.ports(host):
+                port_count += 1
 
-        # Retrieve port db info and map port numbers to port IDs
-        cursor.execute("SELECT id, number from port WHERE ip_address = ?", (str(host.ip),))
-        port_results = {port[1]: port[0] for port in cursor.fetchall()}
+            # Retrieve port db info and map port numbers to port IDs
+            cursor.execute("SELECT id, number from port WHERE ip_address = ?", (str(host.ip),))
+            port_results = {port[1]: port[0] for port in cursor.fetchall()}
 
-        hostnames_to_update: list[tuple] = []
-        for port in host.ports:
-            total_ports += 1
-            port_id = port_results.get(port.number)
+            hostnames_to_update: list[tuple] = []
+            for port in host.ports:
+                total_ports += 1
+                port_id = port_results.get(port.number)
 
-            # Insert and count both vulns and opts if they exist and successful
-            if port.vulns and insert.vulns(port_id, port):
-                vuln_count += 1
+                # Insert and count both vulns and opts if they exist and successful
+                if port.vulns and insert.vulns(port_id, port):
+                    vuln_count += 1
 
-            if port.opts and insert.opts(port_id, port):
-                opt_count += 1
+                if port.opts and insert.opts(port_id, port):
+                    opt_count += 1
 
-            for name in port.hostnames:
-                hostnames_to_update.append(
-                    (
-                        port_id,
-                        name,
-                        str(host.ip),
+                for name in port.hostnames:
+                    hostnames_to_update.append(
+                        (
+                            port_id,
+                            name,
+                            str(host.ip),
+                        )
                     )
+
+            if hostnames_to_update:
+                execute_sql(
+                    "UPDATE hostname SET port_id = ? WHERE name = ? AND ip_address = ?",
+                    hostnames_to_update,
                 )
 
-        if hostnames_to_update:
-            execute_sql(
-                "UPDATE hostname SET port_id = ? WHERE name = ? AND ip_address = ?",
-                hostnames_to_update,
-            )
-
-    conn.close()
+        conn.close()
 
     if port_count != len(exposure):
         print(

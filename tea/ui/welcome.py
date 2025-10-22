@@ -56,7 +56,7 @@ def gen_splash_panel() -> Panel:
     welcome.append("\nhttps://github.com/Fleischrr/TEA-Tool\n", style="dim")
     welcome.append("Author: ", style="white")
     welcome.append("Fleischrr\n", style="bold white")
-    welcome.append("Version: 1.1.1\n", style="dim")
+    welcome.append("Version: 1.3.0\n", style="dim white")
     welcome.append("\n\"You can't protect what you don't know about.\"", style="dim italic")
 
     return Panel(welcome)
@@ -81,7 +81,7 @@ def gen_info_panel() -> Panel:
     )
     info.append(
         "All without directly interacting with or retrieving data from the target, "
-        "but by only using publicly available data.\n"
+        "by only using publicly available data.\n"
     )
 
     # Additional info
@@ -101,6 +101,8 @@ def gen_info_panel() -> Panel:
     info.append("View Exposure", style="cyan")
     info.append("\t[h]: ", style="bold white")
     info.append("Help", style="cyan")
+    info.append("\t[c]: ", style="bold white")
+    info.append("Configuration", style="cyan")
     info.append("\t[q]: ", style="bold white")
     info.append("Quit", style="cyan")
 

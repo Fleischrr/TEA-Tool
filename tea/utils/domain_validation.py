@@ -84,6 +84,8 @@ def validate_subdomain(subdomain_names: list[str]) -> list[str]:
         ):
             case (True, True, True):
                 hostnames.append(name_extracted.subdomain)
+            case (True, True, False):
+                hostnames.append(name_extracted.subdomain)
             case (True, False, False):
                 hostnames.append(name_extracted.subdomain)
             case (False, True, False):

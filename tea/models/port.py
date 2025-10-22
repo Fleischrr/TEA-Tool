@@ -1,6 +1,7 @@
 """Port dataclass for storing network port information."""
 
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from .port_opt import PortOptional
 from .port_vuln import PortVuln
@@ -53,8 +54,8 @@ class Port:
     http_status: int | None = None
     vulns: list[PortVuln] = field(default_factory=list)
     opts: list[PortOptional] = field(default_factory=list)
-    created_at: str = ""
-    modified_at: str = ""
+    created_at: str = str(datetime.now().isoformat())
+    modified_at: str = created_at
 
     def __post_init__(self) -> None:
         """Validate the port number to ensure it is an integer between 1 and 65535."""

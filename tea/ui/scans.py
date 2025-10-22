@@ -5,16 +5,18 @@ import logging
 import os
 from pathlib import Path
 
+from dotenv import get_key
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.text import Text
 
-from tea import utils
+from tea import db, utils
 
 logger = logging.getLogger(__name__)
 console = Console()
 
+TEA_ROOT = Path(os.getenv("TEA_ROOT", os.getcwd())) 
 
 def add_options_info(text_block: Text):
     """
@@ -152,16 +154,18 @@ def full_scan_menu():
         if ready == "n":
             return None, None, None, None
 
-        action = Prompt.ask(
-            "[green]TEA-Tool[/]> [cyan]Full Scan[/]> Use existing exposure?",
-            default="n",
-            choices=["y", "n"],
-            case_sensitive=False,
-        )
+        action = "n"
+        if db.retrieve_exposure():   
+            action = Prompt.ask(
+                "[green]TEA-Tool[/]> [cyan]Full Scan[/]> Use existing exposure?",
+                default="n",
+                choices=["y", "n"],
+                case_sensitive=False,
+            )
 
         if action == "y":
             # Save to DB input
-            save: bool = True
+            save = True
             console.print("[green]TEA-Tool[/]> [cyan]Full Scan[/]> Using existing exposure.")
             save_to_db = Prompt.ask(
                 "[green]TEA-Tool[/]> [cyan]Full Scan[/]> Save to [yellow]Database[/]?",
@@ -241,16 +245,13 @@ def schedule_scan_menu(
         "save": save,
     }
 
-    schedule_path = os.getenv("SCHEDULE_PATH")
-    if Path(schedule_path).exists():
-        logger.debug("Schedule path already exists, overwriting.")
-
     try:
-        Path(schedule_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(schedule_path, "w", encoding="utf-8") as file:
-            json.dump(config, file, indent=4)
+        schedule_path = get_key(dotenv_path=TEA_ROOT / ".env", key_to_get="SCHEDULE_PATH")
+        if schedule_path:
+            with open(schedule_path, "w", encoding="utf-8") as file:
+                json.dump(config, file, indent=4)
 
-        console.print(f"Schedule config file created at {schedule_path} for {scan_type} scan.")
+            console.print(f"Schedule config file created at {schedule_path} for {scan_type} scan.")
 
     except Exception as e:
         console.print(

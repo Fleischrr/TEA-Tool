@@ -1,14 +1,15 @@
 """This is the main entry point for the TEA-Tool."""
 
-import sys
 import logging
+import sys
 
 import tea
 
 logger = logging.getLogger(__name__)
 
 
-def main():  # noqa: D103
+def main():
+    """Control the TEA Tool structure."""
     # Initialize startup actions
     tea.utils.startup_actions()
 
